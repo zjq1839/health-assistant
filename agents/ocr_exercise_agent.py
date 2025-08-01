@@ -9,8 +9,8 @@ import easyocr
 
 def extract_ocr_exercise_info(state: State):
     last_message = state["messages"][-1].content
-    # 假设用户输入包含图片路径，如"从图片 /path/to/image.png 提取"
-    path_match = re.search(r'/[\w/\.]+\.png', last_message)
+    # 假设用户输入包含图片路径，如"从图片 /path/to/image.jpg 提取"
+    path_match = re.search(r'/[\w/\.]+\.(jpg|jpeg|png|gif)', last_message)
     if not path_match:
         return {"messages": [("ai", "请提供有效的图片路径。")]}
     image_path = path_match.group(0)

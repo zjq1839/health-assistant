@@ -6,6 +6,7 @@ from agents.report_agent import extract_report_date, prepare_report_data, prompt
 from agents.general_agent import unknown_intent
 from agents.supervisor_agent import supervisor
 from agents.query_agent import extract_query_params, query_database
+from agents.ocr_exercise_agent import extract_ocr_exercise_info, record_ocr_exercise
 from database import init_db
 
 # 初始化数据库
@@ -24,6 +25,8 @@ graph_builder.add_node("retriever_node", retriever)
 graph_builder.add_node("generator_node", generator)
 graph_builder.add_node("extract_query_params", extract_query_params)
 graph_builder.add_node("query_database", query_database)
+graph_builder.add_node("extract_ocr_exercise_info", extract_ocr_exercise_info)
+graph_builder.add_node("record_ocr_exercise", record_ocr_exercise)
 graph_builder.add_node("unknown_intent", unknown_intent)
 
 graph_builder.add_node("supervisor", supervisor)
@@ -35,6 +38,8 @@ def route_agent(state: State):
         return "extract_meal_info"
     elif next_agent == "exercise":
         return "extract_exercise_info"
+    elif next_agent == "ocr_exercise":
+        return "extract_ocr_exercise_info"
     elif next_agent == "report":
         return "extract_report_date"
     elif next_agent == "query":
@@ -45,6 +50,7 @@ def route_agent(state: State):
 graph_builder.add_conditional_edges("supervisor", route_agent, {
     "extract_meal_info": "extract_meal_info",
     "extract_exercise_info": "extract_exercise_info",
+    "extract_ocr_exercise_info": "extract_ocr_exercise_info",
     "extract_report_date": "extract_report_date",
     "extract_query_params": "extract_query_params",
     "unknown_intent": "unknown_intent"
@@ -81,6 +87,8 @@ graph_builder.add_conditional_edges("prepare_report_data", should_generate_repor
 graph_builder.add_edge("prompt_divide_node", "retriever_node")
 graph_builder.add_edge("retriever_node", "generator_node")
 graph_builder.add_edge("generator_node", END)
+graph_builder.add_edge("extract_ocr_exercise_info", "record_ocr_exercise")
+graph_builder.add_edge("record_ocr_exercise", END)
 graph_builder.add_edge("extract_query_params", "query_database")
 graph_builder.add_edge("query_database", END)
 graph_builder.add_edge("unknown_intent", END)

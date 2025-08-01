@@ -69,7 +69,7 @@ def retriever(state: State):
 def generator(state: State):
     last_message_content = state["messages"][-1][1] if isinstance(state["messages"][-1], tuple) else state["messages"][-1].content
     docs = state["docs"]
-    system_message = "你是一个专业的健康分析助手，你的任务是根据用户的饮食和运动描述，查询相关的营养和健康信息，给出综合分析和建议，包括热量摄入、消耗、营养平衡等。你可以参照以下信息：{docs}，确保不要捏造信息，如果你已知的信息不足以完成任务，请说明。".format(docs="\n".join(docs))
+    system_message = "你是一个专业的健康分析助手，你的任务是根据用户的饮食和运动描述，查询相关的营养和健康信息，给出综合分析和建议，包括热量摄入、消耗、营养平衡等，对于运动信息，基于你的知识进行总结并提出建议。你可以参照以下信息：{docs}，确保不要捏造信息，如果你已知的信息不足以完成任务，请说明。".format(docs="\n".join(docs))
     new_messages = [("system", system_message), ("user", last_message_content)]
     response = llm.invoke(new_messages)
     cleaned_content = re.sub(r'<think>.*?</think>', '', response.content, flags=re.DOTALL).strip()
