@@ -47,19 +47,17 @@ def prompt_divide(state: State):
     messages = [("system", prompt), ("user", content)]
     response = llm.invoke(messages)
     cleaned_content = re.sub(r'<think>.*?</think>', '', response.content, flags=re.DOTALL).strip()
+    print(cleaned_content)
     return {"messages": [("user", cleaned_content)]}
 
 def retriever(state: State):
     last_message = state["messages"][-1]
     content = last_message[1] if isinstance(last_message, tuple) else last_message.content
-    # 生成多查询以改进RAG
-    multi_query_prompt = f"生成3个备选查询来检索相关文档，基于原查询: {content}"
-    response = llm.invoke(multi_query_prompt)
-    queries = response.content.split('\n')[:3]
+    queries = content.split()
     docs = []
     for q in queries:
         if q.strip():
-            samples = vector_store.similarity_search(q, k=3)
+            samples = vector_store.similarity_search(q, k=2)
             for doc in samples:
                 docs.append(doc.page_content)
     # 去重
@@ -72,5 +70,6 @@ def generator(state: State):
     system_message = "你是一个专业的健康分析助手，你的任务是根据用户的饮食和运动描述，查询相关的营养和健康信息，给出综合分析和建议，包括热量摄入、消耗、营养平衡等，对于运动信息，基于你的知识进行总结并提出建议。你可以参照以下信息：{docs}，确保不要捏造信息，如果你已知的信息不足以完成任务，请说明。".format(docs="\n".join(docs))
     new_messages = [("system", system_message), ("user", last_message_content)]
     response = llm.invoke(new_messages)
+    print(response)
     cleaned_content = re.sub(r'<think>.*?</think>', '', response.content, flags=re.DOTALL).strip()
     return {"messages": [("ai", cleaned_content)]}

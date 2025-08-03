@@ -7,41 +7,6 @@ import datetime
 from .config import llm
 
 
-def parse_intent(state: State):
-    last_message = state["messages"][-1]
-    content = last_message[1] if isinstance(last_message, tuple) else last_message.content
-
-    # 使用LLM来判断意图
-    prompt = f"""请分析用户输入的意图，只返回以下四个选项之一：record_meal、record_exercise、generate_report、unknown
-
-用户输入: {content}
-
-判断规则：
-1. 如果用户提到了食物、饮料、吃、喝等与饮食相关的内容，返回：record_meal
-2. 如果用户提到了运动、跑步、游泳、锻炼等与运动相关的内容，返回：record_exercise
-3. 如果用户要求生成报告、分析、总结等，返回：generate_report  
-4. 其他情况返回：unknown
-
-示例：
-- "晚上吃了200g牛排" -> record_meal
-- "跑了30分钟" -> record_exercise
-- "生成今天的报告" -> generate_report
-- "你好" -> unknown
-
-请只返回一个词："""
-
-    response = llm.invoke(prompt)
-    print(response)
-    # 清理LLM响应中的think标签
-    cleaned_response = re.sub(r'<think>.*?</think>', '', response.content, flags=re.DOTALL).strip()
-    intent = cleaned_response.replace("'", "").replace('"', '').strip()
-    
-
-    if intent in ["record_meal", "record_exercise", "generate_report"]:
-        return {"intent": intent}
-    else:
-        return {"intent": "unknown"}
-
 def extract_meal_info(state: State):
     last_message = state["messages"][-1]
     content = last_message[1] if isinstance(last_message, tuple) else last_message.content

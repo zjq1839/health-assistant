@@ -7,8 +7,7 @@ def supervisor(state: State):
     content = state["messages"][-1].content
     prompt = f"""你是一个主管代理，负责协调任务。基于用户输入，选择合适的代理：
 - 如果用户提到吃了什么、饮食记录，如'我早餐吃了...'或'今天午餐是...'：dietary
-- 如果用户提到运动、锻炼记录，如'我跑步了30分钟'：exercise
-- 如果用户提到图片、截图、OCR等与图像提取相关的内容：ocr_exercise
+- 如果用户提到运动、锻炼记录、图片、截图、OCR等与图像提取相关的内容：exercise
 - 如果用户请求生成报告、查看分析，如'生成今天的报告'：report
 - 如果用户查询已有信息，如查询哪一天吃了什么，或者查询哪一天做了什么运动：query
 - 其他不确定或一般查询：general
