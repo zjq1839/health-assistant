@@ -8,6 +8,7 @@ class State(TypedDict):
     intent: Literal["record_meal", "record_exercise", "generate_report", "unknown"]
     meal_type: str
     meal_description: str
+    meal_date: str
     exercise_type: str
     exercise_duration: int
     exercise_description: str

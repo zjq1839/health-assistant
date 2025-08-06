@@ -1,6 +1,194 @@
-# 智能健康助手 (Intelligent Health Assistant)
+# 健康助手 - LangGraph 智能对话系统
 
-这是一个基于大型语言模型（LLM）和多代理协作模式构建的智能健康助手。它不仅能帮助用户记录和分析日常饮食，还能跟踪运动情况，并提供专业的健康知识问答。
+一个基于 LangGraph 的智能健康管理助手，支持餐食记录、运动追踪、数据查询和健康报告生成。
+
+## 🚀 功能特性
+
+### 核心功能
+- 📝 **餐食记录**：智能识别和记录用户的饮食信息
+- 🏃 **运动追踪**：记录运动类型、时长和强度
+- 📷 **图片识别**：通过 OCR 技术识别运动图片信息
+- 📊 **数据查询**：灵活查询历史记录
+- 📈 **健康报告**：基于 RAG 技术生成个性化健康分析
+
+### 系统优化
+- 🔄 **对话上下文管理**：智能限制消息历史，防止内存溢出
+- 🎯 **节点路由优化**：支持循环对话，流程可视化
+- 🛡️ **异常处理**：全面的错误捕获和用户友好的错误提示
+- ⚙️ **配置管理**：集中化配置，支持环境变量
+- 💾 **数据库扩展**：增强的表结构和索引优化
+- 🧪 **单元测试**：完整的测试覆盖和 CI/CD 流程
+- ⚡ **性能优化**：LLM 缓存、批处理和性能监控
+- 🎨 **用户体验**：输入验证、格式化输出和使用指导
+- 📊 **日志监控**：结构化日志和性能指标追踪
+
+## 📁 项目结构
+
+```
+langchain_learn/
+├── agents/                 # 智能代理模块
+│   ├── config.py          # LLM 配置
+│   ├── supervisor.py      # 监督代理
+│   ├── meal_agent.py      # 餐食记录代理
+│   ├── exercise_agent.py  # 运动记录代理
+│   ├── query_agent.py     # 查询代理
+│   └── report_agent.py    # 报告生成代理
+├── core/                  # 核心模块
+│   └── state.py          # 状态管理
+├── utils/                 # 工具模块
+│   ├── logger.py         # 日志系统
+│   ├── performance.py    # 性能优化
+│   └── user_experience.py # 用户体验
+├── tests/                 # 测试模块
+│   ├── test_query_agent.py
+│   └── test_database.py
+├── .github/workflows/     # CI/CD 配置
+│   └── ci.yml
+├── logs/                  # 日志文件
+├── config.py             # 全局配置
+├── database.py           # 数据库操作
+├── graph.py              # 主程序入口
+├── requirements.txt      # 依赖管理
+├── pytest.ini           # 测试配置
+├── .env.example          # 环境变量模板
+└── README.md             # 项目文档
+```
+
+## 🛠️ 安装和配置
+
+### 1. 环境准备
+
+```bash
+# 安装依赖
+pip install -r requirements.txt
+```
+
+### 2. 环境配置
+
+```bash
+# 复制环境变量模板
+cp .env.example .env
+
+# 编辑 .env 文件，配置必要参数
+vim .env
+```
+
+### 3. 数据库初始化
+
+```bash
+# 运行程序会自动初始化数据库
+python graph.py
+```
+
+## 🚀 使用方法
+
+### 基本使用
+
+```bash
+# 启动健康助手
+python graph.py
+
+# 查看帮助信息
+python graph.py --help-mode
+
+# 不生成流程图
+python graph.py --no-graph
+```
+
+### 交互示例
+
+```
+👤 用户: 我今天早餐吃了鸡蛋和牛奶
+🤖 助手: ✅ 餐食记录添加成功
+📅 日期：2024-01-15
+🍽️ 餐食类型：早餐
+📝 描述：鸡蛋和牛奶
+
+👤 用户: 我今天跑步30分钟
+🤖 助手: ✅ 运动记录添加成功
+📅 日期：2024-01-15
+🏃 运动类型：跑步
+⏱️ 时长：30 分钟
+
+👤 用户: 今天吃了什么？
+🤖 助手: 找到 1 条记录：
+--- 记录 1 ---
+📅 日期：2024-01-15
+🍽️ 餐食类型：早餐
+📝 描述：鸡蛋和牛奶
+```
+
+## 🧪 测试
+
+### 运行测试
+
+```bash
+# 运行所有测试
+pytest
+
+# 运行特定测试文件
+pytest tests/test_query_agent.py
+
+# 生成覆盖率报告
+pytest --cov=. --cov-report=html
+```
+
+## 📊 性能优化特性
+
+### 1. LLM 缓存
+- 自动缓存 LLM 响应，减少重复调用
+- LRU 缓存策略，内存使用可控
+- 可通过配置开启/关闭
+
+### 2. 批处理
+- 数据库操作批处理，提升写入性能
+- 可配置批次大小和刷新间隔
+
+### 3. 性能监控
+- 函数执行时间监控
+- 内存使用追踪
+- 慢查询告警
+
+## 📝 日志系统
+
+### 日志级别
+- **INFO**：正常操作记录
+- **WARNING**：性能警告
+- **ERROR**：错误信息
+- **DEBUG**：调试信息
+
+### 日志输出
+- 控制台输出：彩色格式化
+- 文件输出：结构化 JSON 格式
+- 日志轮转：10MB 大小，保留 7 天
+
+## 🔧 配置说明
+
+### 环境变量
+
+```bash
+# LLM 配置
+LLM_MODEL_NAME=qwen2.5:7b
+LLM_LITE_MODEL_NAME=qwen2.5:1.5b
+LLM_BASE_URL=http://localhost:11434
+
+# 数据库配置
+DB_PATH=./health_data.db
+
+# 知识库配置
+KNOWLEDGE_BASE_PATH=./knowledge_base
+EMBEDDING_MODEL_NAME=nomic-embed-text
+
+# 性能配置
+VECTOR_SEARCH_K=3
+MAX_MESSAGES=20
+CACHE_SIZE=100
+ENABLE_CACHE=true
+
+# 日志配置
+LOG_LEVEL=INFO
+LOG_FILE=health_assistant.log
+```
 
 ## 项目特色
 

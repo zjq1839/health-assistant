@@ -6,10 +6,10 @@ from langchain_ollama.embeddings import OllamaEmbeddings
 from core.state import State
 from database import get_meals_by_date
 from .config import llm
+from config import config
 
-KNOWLEDGE_BASE_PATH = "/home/zjq/document/langchain_learn/rag_knowledge_base"
-embeddings = OllamaEmbeddings(model="nn200433/text2vec-bge-large-chinese:latest")
-vector_store = FAISS.load_local(KNOWLEDGE_BASE_PATH, embeddings, allow_dangerous_deserialization=True)
+embeddings = OllamaEmbeddings(model=config.EMBEDDING_MODEL)
+vector_store = FAISS.load_local(config.KNOWLEDGE_BASE_PATH, embeddings, allow_dangerous_deserialization=True)
 
 def extract_report_date(state: State):
     last_message = state["messages"][-1].content
@@ -57,7 +57,7 @@ def retriever(state: State):
     docs = []
     for q in queries:
         if q.strip():
-            samples = vector_store.similarity_search(q, k=2)
+            samples = vector_store.similarity_search(q, k=config.VECTOR_SEARCH_K)
             for doc in samples:
                 docs.append(doc.page_content)
     # 去重
