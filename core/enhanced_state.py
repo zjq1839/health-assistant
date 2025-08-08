@@ -11,6 +11,7 @@ class IntentType(Enum):
     RECORD_EXERCISE = "record_exercise"
     GENERATE_REPORT = "generate_report"
     QUERY = "query"
+    QUERY_DATA = "query_data"
     ADVICE = "advice"  
     UNKNOWN = "unknown"
 
@@ -69,7 +70,7 @@ class EnhancedState(TypedDict):
     """增强的状态定义"""
     messages: Annotated[list, add_messages]
     docs: list
-    intent: Literal["record_meal", "record_exercise", "generate_report", "query", "advice", "unknown"]
+    intent: Literal["record_meal", "record_exercise", "generate_report", "query", "query_data", "advice", "unknown"]
     meal_type: str
     meal_description: str
     meal_date: str

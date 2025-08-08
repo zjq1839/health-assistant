@@ -8,8 +8,8 @@ load_dotenv()
 
 # Define Pydantic models for structured configuration
 class LLMConfig(BaseModel):
-    model: str = Field(default='qwen3:4b', alias='LLM_MODEL')
-    lite_model: str = Field(default='qwen3:1.7b', alias='LLM_LITE_MODEL')
+    model: str = Field(default='gpt-oss:20b', alias='LLM_MODEL')
+    lite_model: str = Field(default='qwen3:4b', alias='LLM_LITE_MODEL')
     temperature: float = Field(default=0.0, alias='LLM_TEMPERATURE')
 
 class DatabaseConfig(BaseModel):

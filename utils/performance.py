@@ -176,9 +176,9 @@ class DatabaseBatchProcessor(BatchProcessor):
     def _execute_batch(self, operations: List[Dict[str, Any]]) -> None:
         """执行批量数据库操作"""
         import sqlite3
-        from database import DB_PATH
+        from config import config
         
-        conn = sqlite3.connect(DB_PATH)
+        conn = sqlite3.connect(config.database.path)
         cursor = conn.cursor()
         
         try:

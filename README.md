@@ -26,28 +26,35 @@
 
 ```
 langchain_learn/
-├── agents/                 # 智能代理模块
+├── agents/                 # 智能代理模块 (V2版本)
 │   ├── config.py          # LLM 配置
-│   ├── supervisor.py      # 监督代理
-│   ├── meal_agent.py      # 餐食记录代理
-│   ├── exercise_agent.py  # 运动记录代理
-│   ├── query_agent.py     # 查询代理
-│   └── report_agent.py    # 报告生成代理
+│   ├── advice_agent_v2.py # 建议代理
+│   ├── dietary_agent_v2.py # 饮食记录代理
+│   ├── exercise_agent_v2.py # 运动记录代理
+│   ├── general_agent_v2.py # 通用代理
+│   ├── query_agent_v2.py  # 查询代理
+│   └── report_agent_v2.py # 报告生成代理
 ├── core/                  # 核心模块
-│   └── state.py          # 状态管理
+│   ├── agent_protocol.py  # 代理协议和服务容器
+│   ├── database_service.py # 数据库服务
+│   ├── enhanced_state.py  # 增强状态管理
+│   ├── intent_recognizer.py # 意图识别
+│   ├── lightweight_planner.py # 轻量级规划器
+│   ├── llm_service.py     # LLM服务
+│   ├── nutrition_service.py # 营养服务
+│   └── service_container.py # 服务容器配置
 ├── utils/                 # 工具模块
 │   ├── logger.py         # 日志系统
 │   ├── performance.py    # 性能优化
 │   └── user_experience.py # 用户体验
 ├── tests/                 # 测试模块
-│   ├── test_query_agent.py
-│   └── test_database.py
-├── .github/workflows/     # CI/CD 配置
-│   └── ci.yml
+├── data/                  # 数据文件
 ├── logs/                  # 日志文件
+├── rag_knowledge_base/    # RAG知识库
 ├── config.py             # 全局配置
-├── database.py           # 数据库操作
-├── graph.py              # 主程序入口
+├── config.yml            # YAML配置文件
+├── main_v2.py            # 主程序入口
+├── test_refactor.py      # 重构测试
 ├── requirements.txt      # 依赖管理
 ├── pytest.ini           # 测试配置
 ├── .env.example          # 环境变量模板
@@ -77,7 +84,7 @@ vim .env
 
 ```bash
 # 运行程序会自动初始化数据库
-python graph.py
+python main_v2.py
 ```
 
 ## 🚀 使用方法
@@ -86,13 +93,13 @@ python graph.py
 
 ```bash
 # 启动健康助手
-python graph.py
+python main_v2.py
 
 # 查看帮助信息
-python graph.py --help-mode
+python main_v2.py --help
 
-# 不生成流程图
-python graph.py --no-graph
+# 启用调试模式
+python main_v2.py --debug
 ```
 
 ### 交互示例
@@ -271,7 +278,7 @@ python init_db.py
 ### 启动应用
 
 ```bash
-python main.py
+python main_v2.py
 ```
 
 ### 基本使用
@@ -304,13 +311,16 @@ python main.py
 
 ```
 .
-├── main.py                 # 主程序入口
-├── graph.py               # 图结构定义
-├── database.py            # 数据库操作
-├── config.py              # 配置文件
-├── tools/                 # 工具函数
-├── agents/                # 专家代理
-├── knowledge_base/        # 知识库
+├── main_v2.py             # 主程序入口（重构版）
+├── config.py              # 全局配置
+├── config.yml             # YAML配置文件
+├── test_refactor.py       # 重构测试
+├── agents/                # 智能代理模块（V2版本）
+├── core/                  # 核心模块（服务容器、协议等）
+├── utils/                 # 工具模块
+├── data/                  # 数据文件
+├── rag_knowledge_base/    # RAG知识库
+├── logs/                  # 日志文件
 └── tests/                 # 测试文件
 ```
 

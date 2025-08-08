@@ -66,6 +66,13 @@ PRECOMPILED_PATTERNS = {
             r'(昨天|前天|那天)呢?$' # 增加了结尾匹配符
         ]
     ],
+    IntentType.QUERY_DATA: [
+        re.compile(p) for p in [
+            r'(查询|查看|获取).*(数据|记录|信息)',
+            r'(显示|展示).*(历史|记录|数据)',
+            r'(我的|查看我的).*(记录|数据)'
+        ]
+    ],
     IntentType.ADVICE: [
         re.compile(p) for p in [
             r'(分享|推荐|给我|介绍).*(菜谱|食谱|方法|建议)',
