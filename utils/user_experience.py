@@ -1,7 +1,6 @@
 import re
 import datetime
 from typing import Dict, List, Optional, Tuple
-from utils.logger import logger
 
 class InputValidator:
     """输入验证器"""

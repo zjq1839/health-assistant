@@ -1,0 +1,40 @@
+# Default application configuration
+
+llm:
+  model: 'qwen3:4b'
+  lite_model: 'qwen3:1.7b'
+  temperature: 0.0
+
+database:
+  path: '/home/zjq/document/langchain_learn/diet.db'
+
+knowledge_base:
+  path: '/home/zjq/document/langchain_learn/rag_knowledge_base'
+  embedding_model: 'nn200433/text2vec-bge-large-chinese:latest'
+
+vector_search:
+  k: 2
+
+dialogue:
+  max_messages: 20
+  immediate_context_size: 3
+  enable_intelligent_truncation: true
+  enable_context_compression: false
+
+cache:
+  enable: true
+  size: 100
+  type: 'sqlite'
+  intent_cache_size: 200
+  intent_cache_ttl_hours: 24
+
+intent:
+  enable_enhanced_recognition: true
+  confidence_threshold: 0.7
+  enable_context_enhancement: true
+  keyword_weight: 0.6
+  llm_weight: 0.4
+
+logging:
+  level: 'INFO'
+  file: 'app.log'

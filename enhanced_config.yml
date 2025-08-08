@@ -1,0 +1,191 @@
+# 增强多轮意图识别配置文件
+
+# 对话管理配置
+dialogue:
+  # 基础设置
+  max_messages: 20  # 最大消息数量
+  immediate_context_size: 5  # 即时上下文大小（最近几轮对话）
+  
+  # 智能截断策略
+  truncation:
+    enabled: true
+    strategy: "importance_based"  # 可选: "time_based", "importance_based", "hybrid"
+    preserve_recent_turns: 3  # 始终保留的最近轮次数
+    min_importance_score: 0.3  # 最小重要性分数阈值
+  
+  # 上下文压缩
+  compression:
+    enabled: true
+    summary_threshold: 15  # 超过此消息数时开始生成摘要
+    max_summary_length: 200  # 摘要最大长度
+
+# 意图识别配置
+intent_recognition:
+  # 缓存设置
+  cache:
+    enabled: true
+    max_size: 200  # 缓存最大条目数
+    ttl: 3600  # 缓存生存时间（秒）
+    pattern_learning: true  # 启用模式学习
+  
+  # 置信度阈值
+  confidence_thresholds:
+    high: 0.8  # 高置信度阈值
+    medium: 0.6  # 中等置信度阈值
+    low: 0.3  # 低置信度阈值
+  
+  # 上下文增强
+  context_enhancement:
+    enabled: true
+    ambiguous_pattern_detection: true  # 检测模糊表达
+    intent_continuity_check: true  # 意图持续性检查
+    historical_intent_weight: 0.7  # 历史意图权重
+  
+  # 关键词权重
+  keyword_weights:
+    dietary: 1.0
+    exercise: 1.0
+    query: 0.8
+    report: 0.9
+    unknown: 0.1
+
+# 对话状态跟踪配置
+state_tracking:
+  # 状态更新策略
+  update_strategy: "incremental"  # 可选: "full", "incremental", "selective"
+  
+  # 实体管理
+  entity_management:
+    max_entities: 50  # 最大实体数量
+    entity_decay_time: 1800  # 实体衰减时间（秒）
+    entity_importance_threshold: 0.5  # 实体重要性阈值
+  
+  # 意图历史
+  intent_history:
+    max_history_length: 10  # 最大历史长度
+    track_confidence_changes: true  # 跟踪置信度变化
+
+# 性能优化配置
+performance:
+  # 并发设置
+  max_concurrent_requests: 10
+  request_timeout: 30  # 请求超时时间（秒）
+  
+  # 内存管理
+  memory_management:
+    gc_interval: 300  # 垃圾回收间隔（秒）
+    max_memory_usage: 512  # 最大内存使用（MB）
+  
+  # 批处理
+  batch_processing:
+    enabled: false
+    batch_size: 5
+    batch_timeout: 1000  # 批处理超时（毫秒）
+
+# 监控和日志配置
+monitoring:
+  # 指标收集
+  metrics:
+    enabled: true
+    collection_interval: 60  # 收集间隔（秒）
+    retention_period: 86400  # 保留期（秒）
+  
+  # 性能指标
+  performance_metrics:
+    - "cache_hit_rate"
+    - "intent_recognition_accuracy"
+    - "context_compression_ratio"
+    - "response_time"
+    - "memory_usage"
+  
+  # 日志设置
+  logging:
+    level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+    log_intent_changes: true
+    log_context_truncation: true
+    log_cache_operations: false
+
+# 实验性功能配置
+experimental:
+  # 高级上下文管理
+  advanced_context:
+    enabled: false
+    semantic_similarity: false  # 语义相似度计算
+    topic_modeling: false  # 主题建模
+    emotion_tracking: false  # 情感跟踪
+  
+  # 自适应学习
+  adaptive_learning:
+    enabled: false
+    learning_rate: 0.01
+    adaptation_threshold: 0.1
+  
+  # 多模态支持
+  multimodal:
+    enabled: false
+    image_analysis: false
+    voice_analysis: false
+
+# 角色感知配置
+role_awareness:
+  # 角色标识
+  role_tags:
+    user_prefix: "[USER]"
+    ai_prefix: "[AI]"
+    system_prefix: "[SYSTEM]"
+  
+  # 角色权重
+  role_weights:
+    user: 1.0  # 用户消息权重
+    ai: 0.6    # AI消息权重
+    system: 0.3  # 系统消息权重
+  
+  # 角色特定处理
+  role_specific_processing:
+    user_intent_extraction: true  # 仅从用户消息提取意图
+    ai_response_analysis: false   # 分析AI回复质量
+    cross_role_context: true     # 跨角色上下文理解
+
+# 质量保证配置
+quality_assurance:
+  # 意图识别质量
+  intent_quality:
+    min_confidence_for_action: 0.6  # 执行动作的最小置信度
+    fallback_to_unknown_threshold: 0.3  # 回退到未知意图的阈值
+    require_confirmation_threshold: 0.5  # 需要确认的阈值
+  
+  # 上下文质量
+  context_quality:
+    max_context_age: 3600  # 最大上下文年龄（秒）
+    context_relevance_threshold: 0.4  # 上下文相关性阈值
+    auto_cleanup_enabled: true  # 自动清理过期上下文
+
+# 安全和隐私配置
+security:
+  # 数据保护
+  data_protection:
+    anonymize_logs: true  # 匿名化日志
+    encrypt_cache: false  # 加密缓存
+    data_retention_days: 30  # 数据保留天数
+  
+  # 访问控制
+  access_control:
+    rate_limiting: true  # 速率限制
+    max_requests_per_minute: 60
+    ip_whitelist: []  # IP白名单
+
+# 调试配置
+debug:
+  # 调试模式
+  debug_mode: false
+  verbose_logging: false
+  
+  # 测试设置
+  test_mode: false
+  mock_llm_responses: false
+  
+  # 性能分析
+  profiling:
+    enabled: false
+    profile_intent_recognition: false
+    profile_context_management: false

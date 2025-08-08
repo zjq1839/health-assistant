@@ -2,7 +2,7 @@ import sqlite3
 from typing import List, Tuple
 from config import config
 
-DB_PATH = config.DB_PATH
+DB_PATH = config.database.path
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)

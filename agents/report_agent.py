@@ -1,25 +1,22 @@
 import re
-import datetime
-from langchain_ollama import ChatOllama
 from langchain_community.vectorstores import FAISS
 from langchain_ollama.embeddings import OllamaEmbeddings
 from core.state import State
 from database import get_meals_by_date
 from .config import llm
+from .utils import parse_date_with_llm
 from config import config
 
-embeddings = OllamaEmbeddings(model=config.EMBEDDING_MODEL)
-vector_store = FAISS.load_local(config.KNOWLEDGE_BASE_PATH, embeddings, allow_dangerous_deserialization=True)
+embeddings = OllamaEmbeddings(model=config.knowledge_base.embedding_model)
+vector_store = FAISS.load_local(config.knowledge_base.path, embeddings, allow_dangerous_deserialization=True)
 
 def extract_report_date(state: State):
+    """使用LLM智能解析用户输入中的报告日期"""
     last_message = state["messages"][-1].content
-    today = datetime.date.today()
-    if "今天" in last_message:
-        report_date = today.isoformat()
-    elif "昨天" in last_message:
-        report_date = (today - datetime.timedelta(days=1)).isoformat()
-    else:
-        report_date = today.isoformat()
+    
+    # 使用LLM进行智能日期解析
+    report_date = parse_date_with_llm(last_message)
+    
     return {"report_date": report_date}
 
 def prepare_report_data(state: State):
@@ -57,7 +54,7 @@ def retriever(state: State):
     docs = []
     for q in queries:
         if q.strip():
-            samples = vector_store.similarity_search(q, k=config.VECTOR_SEARCH_K)
+            samples = vector_store.similarity_search(q, k=config.vector_search.k)
             for doc in samples:
                 docs.append(doc.page_content)
     # 去重

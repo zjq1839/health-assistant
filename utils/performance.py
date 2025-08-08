@@ -43,7 +43,7 @@ class LRUCache:
             return len(self.cache)
 
 # 全局缓存实例
-llm_cache = LRUCache(max_size=config.CACHE_SIZE)
+llm_cache = LRUCache(max_size=config.cache.size)
 vector_cache = LRUCache(max_size=50)
 
 def cache_llm_response(func: Callable) -> Callable:

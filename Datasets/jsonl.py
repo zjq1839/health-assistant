@@ -1,11 +1,6 @@
-from langchain.document_loaders import JSONLoader
-from langchain.text_splitter import CharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 import json
-import ast
-import re
 from langchain_ollama import OllamaEmbeddings
-from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 
 # 步骤1: 自定义加载JSONL文件

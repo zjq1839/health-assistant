@@ -1,7 +1,7 @@
 from core.state import State
 from database import add_meal
 import datetime
-from .utils import extract_info_with_llm, parse_date
+from .utils import extract_info_with_llm, parse_date_with_llm
 from .prompts import DIETARY_PROMPT
 
 def extract_meal_info(state: State):
@@ -14,7 +14,7 @@ def extract_meal_info(state: State):
         return {"next_agent": "query"}
 
     # 进一步处理和验证提取的数据
-    meal_date = parse_date(extracted_data.get("date"))
+    meal_date = parse_date_with_llm(extracted_data.get("date", content))
 
     return {
         "meal_type": extracted_data.get("meal_type"),

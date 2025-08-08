@@ -1,7 +1,5 @@
-import faiss
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.embeddings import OllamaEmbeddings
+from langchain_ollama import OllamaEmbeddings
 
 # RAG知识库路径
 KNOWLEDGE_BASE_PATH = "/home/zjq/document/langchain_learn/rag_knowledge_base"

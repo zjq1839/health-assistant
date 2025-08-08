@@ -1,8 +1,6 @@
-import pytest
 import datetime
 from unittest.mock import Mock, patch
 from agents.query_agent import parse_llm_response, extract_query_params
-from core.state import State
 
 class TestQueryAgent:
     """测试查询代理的功能"""

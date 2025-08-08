@@ -16,6 +16,9 @@ easyocr>=1.7.0
 # 环境变量管理
 python-dotenv>=1.0.0
 
+# Pydantic for data validation
+pydantic>=2.0.0
+
 # 日志
 loguru>=0.7.0
 structlog>=23.1.0

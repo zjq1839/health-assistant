@@ -1,4 +1,3 @@
-import logging
 import structlog
 from loguru import logger
 from config import config
@@ -8,19 +7,19 @@ import os
 # 配置 loguru
 logger.remove()  # 移除默认处理器
 
-# 添加控制台输出
+# Add console output
 logger.add(
     sys.stderr,
-    level=config.LOG_LEVEL,
+    level=config.logging.level,
     format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
 )
 
-# 添加文件输出
+# Add file output
 log_dir = os.path.join(os.path.dirname(__file__), '..', 'logs')
 os.makedirs(log_dir, exist_ok=True)
 logger.add(
-    os.path.join(log_dir, config.LOG_FILE),
-    level=config.LOG_LEVEL,
+    os.path.join(log_dir, config.logging.file),
+    level=config.logging.level,
     rotation="10 MB",
     retention="7 days",
     format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}"
