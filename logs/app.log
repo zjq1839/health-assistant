@@ -349,3 +349,5 @@
 2025-08-08 12:16:32 | ERROR    | core.intent_recognizer:_llm_based_recognition:350 - LLM intent recognition failed: from_string
 2025-08-08 12:16:32 | INFO     | core.intent_recognizer:_combine_results:465 - Intent recognition details: {"timestamp": "2025-08-08T04:16:32.177599+00:00", "user_input": "nihao", "keyword_intent": "unknown", "keyword_confidence": 0.0, "llm_intent": "unknown", "llm_confidence": 0.0, "final_intent": "unknown", "final_confidence": 0.0, "fusion_strategy": "consistent"}
 2025-08-08 12:16:32 | INFO     | agents.supervisor_agent:supervisor:65 - Intent: unknown, Confidence: 0.00, Agent: general
+2025-08-08 12:19:52 | INFO     | __main__:main:89 - Health assistant interrupted by user
+2025-08-08 12:19:52 | WARNING  | utils.performance:wrapper:111 - Slow function detected: main took 5227.21s
