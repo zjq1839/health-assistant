@@ -8,8 +8,8 @@ load_dotenv()
 
 # Define Pydantic models for structured configuration
 class LLMConfig(BaseModel):
-    model: str = Field(default='gpt-oss:20b', alias='LLM_MODEL')
-    lite_model: str = Field(default='qwen3:4b', alias='LLM_LITE_MODEL')
+    model: str = Field(default='qwen3:32b', alias='LLM_MODEL')
+    lite_model: str = Field(default='qwen3:32b', alias='LLM_LITE_MODEL')
     temperature: float = Field(default=0.0, alias='LLM_TEMPERATURE')
 
 class DatabaseConfig(BaseModel):
@@ -45,6 +45,17 @@ class IntentConfig(BaseModel):
     llm_temperature: float = Field(default=0.1, alias='INTENT_LLM_TEMPERATURE')
     llm_timeout_seconds: int = Field(default=5, alias='INTENT_LLM_TIMEOUT_SECONDS')
     llm_max_response_length: int = Field(default=1024, alias='LLM_MAX_RESPONSE_LENGTH')
+    
+    # 新增关键参数
+    llm_override_margin: float = Field(default=0.2, alias='LLM_OVERRIDE_MARGIN')
+    conflict_penalty: float = Field(default=0.15, alias='CONFLICT_PENALTY')
+    rule_confidence_cap: float = Field(default=0.85, alias='RULE_CONFIDENCE_CAP')
+    lite_confidence_threshold: float = Field(default=0.65, alias='LITE_CONFIDENCE_THRESHOLD')
+    rule_confidence_threshold: float = Field(default=0.6, alias='RULE_CONFIDENCE_THRESHOLD')
+    
+    # 新增：直接LLM模式开关
+    llm_only_mode: bool = Field(default=True, alias='LLM_ONLY_MODE')
+    state_enhanced_llm: bool = Field(default=True, alias='STATE_ENHANCED_LLM')
 
 class LoggingConfig(BaseModel):
     level: str = Field(default='INFO', alias='LOG_LEVEL')
@@ -72,17 +83,6 @@ def load_config_from_yaml(path: str) -> dict:
         with open(path, 'r') as f:
             return yaml.safe_load(f)
     return {}
-
-def merge_configs(yaml_config: dict, env_config: dict) -> dict:
-    """Merge YAML config with environment variables, giving priority to env vars."""
-    def _merge(a, b):
-        for key, value in b.items():
-            if isinstance(value, dict) and key in a and isinstance(a[key], dict):
-                a[key] = _merge(a[key], value)
-            else:
-                a[key] = value
-        return a
-    return _merge(yaml_config, env_config)
 
 # Load configurations
 yaml_config = load_config_from_yaml('config.yml')

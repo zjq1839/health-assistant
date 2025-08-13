@@ -170,8 +170,11 @@ class MessageFormatter:
         success_messages = {
             "add_meal": "✅ 餐食记录添加成功",
             "add_exercise": "✅ 运动记录添加成功",
-            "query_data": "✅ 数据查询完成",
-            "generate_report": "✅ 报告生成完成"
+            "record_meal": "🍽️ 饮食记录成功",
+            "record_exercise": "🏃 运动记录成功",
+            "generate_report": "📊 报告生成完成",
+            "query": "✅ 数据查询完成",
+            "advice": "💡 建议已生成",
         }
         
         base_message = success_messages.get(operation, "✅ 操作完成")
@@ -242,17 +245,17 @@ class UserGuidance:
     def get_examples_by_intent(intent: str) -> List[str]:
         """根据意图获取示例"""
         examples = {
-            "add_meal": [
+            "record_meal": [
                 "我今天早餐吃了鸡蛋和牛奶",
                 "记录午餐：米饭、青菜、鸡肉",
                 "添加晚餐：面条和蔬菜"
             ],
-            "add_exercise": [
+            "record_exercise": [
                 "我今天跑步30分钟",
                 "记录运动：游泳45分钟",
                 "添加运动：骑车1小时"
             ],
-            "query_data": [
+            "query": [
                 "今天吃了什么？",
                 "本周的运动记录",
                 "查询1月15日的数据"
@@ -261,6 +264,11 @@ class UserGuidance:
                 "生成健康报告",
                 "分析我的运动数据",
                 "总结本周的健康状况"
+            ],
+            "advice": [
+                "给我一些健康建议",
+                "如何制定运动计划",
+                "推荐一些健康食谱"
             ]
         }
         

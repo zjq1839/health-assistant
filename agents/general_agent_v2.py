@@ -42,10 +42,7 @@ class GeneralAgentV2(BaseAgent):
             # 调用 LLM 服务
             response = self.llm_service.generate_response(prompt, "")
             
-            # 添加助手回复到状态
-            if 'messages' not in state:
-                state['messages'] = []
-            state['messages'].append({"role": "assistant", "content": response})
+            # Note: main_v2.py handles adding assistant messages to state in _update_dialog_history
             
             return self._create_success_response(response)
             

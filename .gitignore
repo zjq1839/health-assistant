@@ -2,3 +2,4 @@ logs/*
 .cache/*
 rag_knowledge_base/*
 data/*
+知识库/*

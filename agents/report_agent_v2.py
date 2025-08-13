@@ -1,9 +1,7 @@
 import re
 import datetime
-from core.agent_protocol import BaseAgent
+from core.agent_protocol import BaseAgent, AgentResponse, LLMService, DatabaseService
 from core.enhanced_state import EnhancedState
-from core.agent_protocol import LLMService
-from core.agent_protocol import DatabaseService
 
 class ReportAgentV2(BaseAgent):
     """报告智能体 V2 - 生成健康报告和分析"""
@@ -21,7 +19,8 @@ class ReportAgentV2(BaseAgent):
         """处理报告生成请求"""
         try:
             # 获取用户的最后一条消息
-            last_user_msg = state.messages[-1] if state.messages else {}
+            messages = state.get('messages', [])
+            last_user_msg = messages[-1] if messages else {}
             user_content = last_user_msg.get('content', '')
             
             # 解析报告日期
@@ -33,7 +32,6 @@ class ReportAgentV2(BaseAgent):
             # 生成报告
             report = self._generate_report(data, report_date)
             
-            state.add_message("assistant", report)
             return self._create_success_response(report)
             
         except Exception as e:
@@ -58,14 +56,14 @@ class ReportAgentV2(BaseAgent):
     def _get_report_data(self, report_date: str) -> dict:
         """获取报告数据"""
         try:
-            # 这里应该从数据库获取数据
-            # meals = await self.db_service.get_meals_by_date(report_date)
-            # exercises = await self.db_service.get_exercises_by_date(report_date)
+            # 直接从数据库读取指定日期的饮食与运动记录
+            meals = self.db_service.query_meals(report_date, limit=50)
+            exercises = self.db_service.query_exercises(report_date, limit=50)
             
             return {
                 'date': report_date,
-                'meals': [],  # 暂时返回空列表
-                'exercises': [],  # 暂时返回空列表
+                'meals': meals,
+                'exercises': exercises,
             }
         except Exception as e:
             print(f"获取报告数据时发生错误：{e}")
@@ -108,21 +106,3 @@ class ReportAgentV2(BaseAgent):
             
         except Exception as e:
             return f"生成报告时发生错误：{str(e)}"
-    
-    def _create_success_response(self, message: str) -> AgentResponse:
-        """创建成功响应"""
-        from core.agent_protocol import AgentResponse, AgentResult
-        return AgentResponse(
-            status=AgentResult.SUCCESS,
-            message=message,
-            data={}
-        )
-    
-    def _create_error_response(self, error_msg: str) -> AgentResponse:
-        """创建错误响应"""
-        from core.agent_protocol import AgentResponse, AgentResult
-        return AgentResponse(
-            status=AgentResult.ERROR,
-            message=error_msg,
-            data={}
-        )

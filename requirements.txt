@@ -1,45 +1,27 @@
-# LangChain 核心库
-langchain>=0.1.0
-langchain-community>=0.0.20
-langchain-ollama>=0.1.0
-langgraph>=0.0.30
-
-# 向量存储和嵌入
-faiss-cpu>=1.7.4
-
-# OCR 功能
-easyocr>=1.7.0
-
-# 数据库
-# sqlite3 是 Python 标准库，无需安装
-
-# 环境变量管理
-python-dotenv>=1.0.0
-
-# Pydantic for data validation
+langchain==0.1.20
+langchain-community==0.0.38
+langchain-core==0.1.52
+requests>=2.31.0
 pydantic>=2.0.0
-
-# 日志
-loguru>=0.7.0
-structlog>=23.1.0
-
-# 数据处理
+PyYAML>=6.0
+fastapi>=0.100.0
+uvicorn>=0.22.0
+faiss-cpu>=1.7.4
+sentence-transformers>=2.2.2
 numpy>=1.24.0
-pandas>=2.0.0
+aiofiles>=23.0.0
+python-multipart>=0.0.6
 
-# 图像处理
-Pillow>=9.5.0
-opencv-python>=4.8.0
+# PDF 处理支持
+pypdf>=3.0.0
+pymupdf>=1.23.0
 
-# 测试
-pytest>=7.4.0
-pytest-cov>=4.1.0
+# LlamaIndex 支持 (可选)
+llama-index>=0.9.0
+llama-index-vector-stores-faiss>=0.1.0
+llama-index-embeddings-ollama>=0.1.0
+llama-index-readers-file>=0.1.0
 
-# 开发工具
-black>=23.0.0
-flake8>=6.0.0
-mypy>=1.5.0
-
-# Jupyter (可选)
-jupyter>=1.0.0
-ipython>=8.0.0
+# 文档处理增强
+unstructured>=0.10.0
+python-magic>=0.4.27

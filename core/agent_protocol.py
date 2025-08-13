@@ -268,10 +268,35 @@ class AgentFactory:
                 llm_service=self.container.get(LLMService)
             )
         elif agent_name == "advice":
-            from agents.advice_agent_v2 import AdviceAgentV2
-            agent = AdviceAgentV2(
-                llm_service=self.container.get(LLMService)
-            )
+            # Prefer RAG-enhanced advice agent when knowledge base is available
+            try:
+                from pathlib import Path as _Path
+                from config import config as _cfg
+                kb_path = _cfg.knowledge_base.path
+                kb_dir = _Path(kb_path)
+                has_kb = kb_dir.exists() and (any(kb_dir.rglob("*.txt")) or (kb_dir / "vector_store").exists())
+                if has_kb:
+                    from agents.rag_enhanced_advice_agent import RAGEnhancedAdviceAgent
+                    agent = RAGEnhancedAdviceAgent(
+                        llm_service=self.container.get(LLMService),
+                        db_service=self.container.get(DatabaseService)
+                    )
+                    # Proactively load knowledge base for better retrieval
+                    try:
+                        agent.load_knowledge_from_directory(kb_path)
+                    except Exception:
+                        pass
+                else:
+                    from agents.advice_agent_v2 import AdviceAgentV2
+                    agent = AdviceAgentV2(
+                        llm_service=self.container.get(LLMService)
+                    )
+            except Exception:
+                # Fallback to the original advice agent on any failure
+                from agents.advice_agent_v2 import AdviceAgentV2
+                agent = AdviceAgentV2(
+                    llm_service=self.container.get(LLMService)
+                )
         else:
             from agents.general_agent_v2 import GeneralAgentV2
             agent = GeneralAgentV2(

@@ -2,9 +2,11 @@ import json
 import re
 import datetime
 from core.agent_protocol import BaseAgent
+from core.agent_protocol import AgentResponse  # ensure annotation resolves at import time
 from core.enhanced_state import EnhancedState
 from core.agent_protocol import LLMService
 from core.agent_protocol import DatabaseService
+from utils.common_parsers import parse_date_from_text, parse_time_range
 
 class QueryAgentV2(BaseAgent):
     """查询智能体 V2 - 处理数据查询请求"""
@@ -13,7 +15,7 @@ class QueryAgentV2(BaseAgent):
         from core.enhanced_state import IntentType
         super().__init__(
             name="query",
-            intents=[IntentType.QUERY_DATA],
+            intents=[IntentType.QUERY],
             db_service=db_service,
             llm_service=llm_service
         )
@@ -21,8 +23,9 @@ class QueryAgentV2(BaseAgent):
     def run(self, state: EnhancedState) -> AgentResponse:
         """处理查询请求"""
         try:
-            # 获取用户的最后一条消息
-            last_user_msg = state.messages[-1] if state.messages else {}
+            # 获取对话历史和用户消息
+            messages = state.get('messages', [])
+            last_user_msg = messages[-1] if messages else {}
             user_content = last_user_msg.get('content', '')
             
             # 解析查询参数
@@ -30,11 +33,10 @@ class QueryAgentV2(BaseAgent):
             
             # 执行查询
             result = self._execute_query(query_params)
-            
+           
             # 格式化响应
             response = self._format_response(result, query_params)
             
-            state.add_message("assistant", response)
             return self._create_success_response(response)
             
         except Exception as e:
@@ -45,17 +47,18 @@ class QueryAgentV2(BaseAgent):
         """解析查询参数"""
         today = datetime.date.today()
         
-        # 日期解析
-        if "昨天" in content:
-            query_date = (today - datetime.timedelta(days=1)).isoformat()
-        elif "前天" in content:
-            query_date = (today - datetime.timedelta(days=2)).isoformat()
-        elif re.search(r'(\d+)月(\d+)[号日]', content):
-            match = re.search(r'(\d+)月(\d+)[号日]', content)
-            month, day = int(match.group(1)), int(match.group(2))
-            query_date = f"2025-{month:02d}-{day:02d}"
+        # 优先解析相对或绝对日期
+        parsed = parse_date_from_text(content, base_date=today)
+        if parsed is None:
+            # 尝试解析范围，如本周、本月等
+            start_date, end_date = parse_time_range(content, base_date=today)
+            if start_date and end_date:
+                # 范围查询：此版本先简单取开始日
+                query_date = start_date.isoformat()
+            else:
+                query_date = today.isoformat()
         else:
-            query_date = today.isoformat()
+            query_date = parsed.isoformat()
         
         # 查询类型解析
         if any(kw in content for kw in ['吃', '喝', '饮食', '早餐', '午餐', '晚餐']):
@@ -64,7 +67,8 @@ class QueryAgentV2(BaseAgent):
             query_type = 'exercise'
         else:
             # 基于上下文推断
-            context = ' '.join([msg.get('content', '') for msg in state.messages[-3:]])
+            messages = state.get('messages', [])
+            context = ' '.join([msg.get('content', '') for msg in messages[-3:]])
             if any(kw in context for kw in ['饮食记录', '吃了什么', '早餐', '午餐', '晚餐']):
                 query_type = 'dietary'
             elif any(kw in context for kw in ['运动', '跑步', '锻炼']):
@@ -91,14 +95,12 @@ class QueryAgentV2(BaseAgent):
         
         try:
             if query_type in ['dietary', 'both']:
-                # 查询饮食记录
-                # result['dietary_records'] = await self.db_service.get_meals_by_date(query_date)
-                result['dietary_records'] = []  # 暂时返回空列表
+                # 使用已实现的数据库查询方法
+                result['dietary_records'] = self.db_service.query_meals(query_date, limit=50)
             
             if query_type in ['exercise', 'both']:
-                # 查询运动记录
-                # result['exercise_records'] = await self.db_service.get_exercises_by_date(query_date)
-                result['exercise_records'] = []  # 暂时返回空列表
+                # 使用已实现的数据库查询方法
+                result['exercise_records'] = self.db_service.query_exercises(query_date, limit=50)
                 
         except Exception as e:
             print(f"查询数据库时发生错误：{e}")
@@ -145,21 +147,3 @@ class QueryAgentV2(BaseAgent):
                 response_parts.append("\n🏃 运动记录：暂无记录")
         
         return ''.join(response_parts)
-    
-    def _create_success_response(self, message: str) -> AgentResponse:
-        """创建成功响应"""
-        from core.agent_protocol import AgentResponse, AgentResult
-        return AgentResponse(
-            status=AgentResult.SUCCESS,
-            message=message,
-            data={}
-        )
-    
-    def _create_error_response(self, error_msg: str) -> AgentResponse:
-        """创建错误响应"""
-        from core.agent_protocol import AgentResponse, AgentResult
-        return AgentResponse(
-            status=AgentResult.ERROR,
-            message=error_msg,
-            data={}
-        )

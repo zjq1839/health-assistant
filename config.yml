@@ -1,7 +1,7 @@
 # Default application configuration
 
 llm:
-  model: 'qwen3:4b'
+  model: 'qwen3:32b'
   lite_model: 'qwen3:1.7b'
   temperature: 0.0
 

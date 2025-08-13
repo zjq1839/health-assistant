@@ -230,6 +230,14 @@ class LocalFoodDatabase(FoodDatabase):
                 ),
                 category="蛋类",
                 aliases=["鸡蛋", "蛋"]
+            ),
+            FoodItem(
+                name="牛奶",
+                nutrition_per_100g=NutritionFact(
+                    calories=65, protein=3.5, carbs=5, fat=3.5, fiber=0
+                ),
+                category="饮品",
+                aliases=["纯牛奶", "鲜牛奶"]
             )
         ]
         

@@ -8,6 +8,7 @@
 """
 
 import sys
+import re
 import argparse
 from pathlib import Path
 from typing import Dict, Any
@@ -15,12 +16,13 @@ from typing import Dict, Any
 # 添加项目根目录到路径
 sys.path.append(str(Path(__file__).parent))
 
-from core.service_container import setup_container, get_container
+from core.service_container import setup_container, get_container, LLMService
 from core.agent_protocol import AgentFactory, AgentResponse, AgentResult
 from core.lightweight_planner import LightweightPlanner, PlanResult
 from core.enhanced_state import EnhancedState, DialogState, IntentType
 from utils.logger import logger
 from utils.user_experience import UserGuidance
+from utils.common_parsers import intent_to_agent_mapping
 
 
 class HealthAssistantV2:
@@ -50,10 +52,9 @@ class HealthAssistantV2:
         logger.info("HealthAssistantV2 initialized successfully")
     
     def _init_state(self) -> EnhancedState:
-        """初始化增强状态"""
+        """初始化增强状态（精简版）"""
         return {
             'messages': [],
-            'docs': [],
             'intent': None,
             'dialog_state': DialogState(
                 current_intent=None,
@@ -62,26 +63,7 @@ class HealthAssistantV2:
                 context_summary="",
                 turn_history=[]
             ),
-            'next_agent': None,
-            # 餐食相关字段
-            'meal_description': '',
-            'meal_type': '',
-            'meal_date': '',
-            'meal_calories': 0,
-            'meal_nutrients': '',
-            # 运动相关字段
-            'exercise_description': '',
-            'exercise_type': '',
-            'exercise_duration': 0,
-            'exercise_date': '',
-            'exercise_calories_burned': 0,
-            'exercise_intensity': '',
-            # 查询相关字段
-            'query_date': '',
-            'query_type': '',
-            # 报告相关字段
-            'report_date': '',
-            'report_type': ''
+            'turn_id': 0
         }
     
     def run(self):
@@ -145,7 +127,7 @@ class HealthAssistantV2:
         self.state['messages'].append({"role": "user", "content": user_input})
         
         # 2. 使用轻量级规划器进行意图识别
-        plan_result = self.planner.plan(user_input, self._get_context())
+        plan_result = self.planner.plan(user_input, self._get_context(), self.state)
         
         logger.info(
             f"Intent planning completed",
@@ -190,7 +172,15 @@ class HealthAssistantV2:
         try:
             logger.info(f"About to run agent: {agent.name}")
             response = agent.run(self.state)
-            logger.info(f"Agent response: status={response.status if response else None}, message={response.message[:50] if response and response.message else None}")
+            # Sanitize hidden thinking tags from logs
+            if response and getattr(response, 'message', None):
+                _preview = response.message
+                if isinstance(_preview, str):
+                    _preview = re.sub(r'<think>.*?</think>', '', _preview, flags=re.DOTALL).strip()
+                    _preview = _preview[:50]
+            else:
+                _preview = None
+            logger.info(f"Agent response: status={response.status if response else None}, message={_preview}")
         except Exception as e:
             logger.error(f"Agent execution failed: {str(e)}", exc_info=True)
             response = self._create_error_response(f"Agent执行失败: {str(e)}")
@@ -231,7 +221,6 @@ class HealthAssistantV2:
     
     def _create_error_response(self, message: str) -> 'AgentResponse':
         """创建错误响应"""
-        from core.agent_protocol import AgentResponse, AgentResult
         return AgentResponse(
             status=AgentResult.ERROR,
             message=message,
@@ -243,33 +232,34 @@ class HealthAssistantV2:
         if not plan_result.intent:
             return "general"
         
-        # 意图到Agent的映射
-        intent_to_agent = {
-            IntentType.RECORD_MEAL: "dietary",
-            IntentType.RECORD_EXERCISE: "exercise",
-            IntentType.QUERY_DATA: "query",
-            IntentType.GENERATE_REPORT: "report",
-            IntentType.ADVICE: "advice",
-            IntentType.UNKNOWN: "general"
-        }
-        
-        return intent_to_agent.get(plan_result.intent, "general")
+        # 使用统一的意图到Agent映射
+        return intent_to_agent_mapping(plan_result.intent)
     
     def _update_dialog_history(self, user_input: str, response: AgentResponse):
         """更新对话历史"""
         # 添加助手回复到消息历史
-        self.state['messages'].append({"role": "assistant", "content": response.message})
+        cleaned_msg_for_history = re.sub(r'<think>.*?</think>', '', response.message, flags=re.DOTALL).strip() if isinstance(response.message, str) else response.message
+        self.state['messages'].append({"role": "assistant", "content": cleaned_msg_for_history})
         
-        # 更新对话状态
-        turn_info = {
-            'user_input': user_input,
-            'intent': self.state['dialog_state'].current_intent.value if self.state['dialog_state'].current_intent else None,
-            'agent_used': response.data.get('agent_name', 'unknown') if response.data else 'unknown',
-            'status': response.status.value,
-            'evidence_count': len(response.evidence) if response.evidence else 0
-        }
+        # 将最近一轮识别的意图写入 DialogState.turn_history（使用 DialogTurn 对象）
+        from datetime import datetime
+        from core.enhanced_state import DialogTurn
+        intent = self.state['dialog_state'].current_intent or IntentType.UNKNOWN
+        confidence = self.state['dialog_state'].intent_confidence or 0.0
+        turn_obj = DialogTurn(
+            turn_id=(self.state.get('turn_id', 0) or 0) + 1,
+            timestamp=datetime.now(),
+            user_input=user_input,
+            intent=intent,
+            confidence=confidence,
+            entities=self.state['dialog_state'].entities.copy(),
+            context_used=[]
+        )
+        # 更新 turn_id
+        self.state['turn_id'] = turn_obj.turn_id
         
-        self.state['dialog_state'].turn_history.append(turn_info)
+        # 追加到状态的 turn_history
+        self.state['dialog_state'].turn_history.append(turn_obj)
         
         # 保持历史长度
         if len(self.state['dialog_state'].turn_history) > 10:
@@ -291,7 +281,8 @@ class HealthAssistantV2:
         
         icon = status_icons.get(response.status, "ℹ️")
         
-        print(f"\n🤖 助手：{icon} {response.message}")
+        cleaned_message = re.sub(r'<think>.*?</think>', '', response.message, flags=re.DOTALL).strip() if isinstance(response.message, str) else response.message
+        print(f"\n🤖 助手：{icon} {cleaned_message}")
         
         # 显示证据信息（如果有）
         if response.evidence and len(response.evidence) > 0:
@@ -310,103 +301,178 @@ class HealthAssistantV2:
                 print(f"\n⚠️ 注意事项：")
                 for field, warning in warnings.items():
                     print(f"  • {warning}")
-    
+
+        # 显示Token使用情况
+        llm_service = self.container.get(LLMService)
+        token_usage = llm_service.token_usage_callback.get_usage()
+        print("\n" + "-"*20 + " Token Usage " + "-"*20)
+        print(f"  • Prompt Tokens: {token_usage.get('total_prompt_tokens', 0)}")
+        print(f"  • Completion Tokens: {token_usage.get('total_completion_tokens', 0)}")
+        print(f"  • Total Tokens: {token_usage.get('total_tokens', 0)}")
+        print("-"*55)
+        llm_service.token_usage_callback.reset()  # 重置以便下次统计
+
     def _show_help(self):
         """显示帮助信息"""
-        print("\n" + "="*60)
-        print("🏥 健康助手 V2 使用指南")
-        print("="*60)
+        print("\n📋 健康助手使用指南：")
+        print("1. 📝 记录饮食：'我早餐吃了鸡蛋和牛奶'")
         
-        print("\n📝 基本命令：")
-        print("  • help  - 显示此帮助信息")
-        print("  • quit  - 退出程序")
-        print("  • stats - 显示系统统计信息")
-        print("  • health - 执行系统健康检查")
-        print("  • reset - 重置对话历史")
+        # 系统健康检查
+        self._perform_health_check()
         
-        print("\n🍽️ 饮食记录示例：")
-        examples = self.user_guidance.get_examples_by_intent('add_meal')
-        for example in examples[:3]:
-            print(f"  • {example}")
+        # 获取示例
+        try:
+            meal_examples = self.user_guidance.get_examples_by_intent("record_meal")
+            exercise_examples = self.user_guidance.get_examples_by_intent("record_exercise") 
+            query_examples = self.user_guidance.get_examples_by_intent("query")
+            report_examples = self.user_guidance.get_examples_by_intent("generate_report")
+            advice_examples = self.user_guidance.get_examples_by_intent("advice")
+            
+            print(f"   示例：{meal_examples[0] if meal_examples else '我早餐吃了鸡蛋和牛奶'}")
+            print("2. 🏃 记录运动：'我跑步30分钟'")
+            print(f"   示例：{exercise_examples[0] if exercise_examples else '我跑步30分钟'}")
+            print("3. 📊 查询记录：'查询我昨天的饮食记录'")
+            print(f"   示例：{query_examples[0] if query_examples else '查询我昨天的饮食记录'}")
+            print("4. 📈 生成报告：'生成本周健康报告'")
+            print(f"   示例：{report_examples[0] if report_examples else '生成本周健康报告'}")
+            print("5. 💡 获取建议：'推荐一些健康食谱'")
+            print(f"   示例：{advice_examples[0] if advice_examples else '推荐一些健康食谱'}")
+        except Exception as e:
+            logger.warning(f"获取示例失败: {e}")
+            # 提供默认示例
+            print("   示例：我早餐吃了鸡蛋和牛奶")
+            print("2. 🏃 记录运动：'我跑步30分钟'")
+            print("   示例：我跑步30分钟")
+            print("3. 📊 查询记录：'查询我昨天的饮食记录'")
+            print("   示例：查询我昨天的饮食记录")
+            print("4. 📈 生成报告：'生成本周健康报告'")
+            print("   示例：生成本周健康报告")
+            print("5. 💡 获取建议：'推荐一些健康食谱'")
+            print("   示例：推荐一些健康食谱")
         
-        print("\n🏃 运动记录示例：")
-        examples = self.user_guidance.get_examples_by_intent('add_exercise')
-        for example in examples[:3]:
-            print(f"  • {example}")
-        
-        print("\n📊 查询数据示例：")
-        examples = self.user_guidance.get_examples_by_intent('query_data')
-        for example in examples[:3]:
-            print(f"  • {example}")
-        
-        print("\n📈 生成报告示例：")
-        examples = self.user_guidance.get_examples_by_intent('generate_report')
-        for example in examples[:2]:
-            print(f"  • {example}")
-        
-        print("\n💡 健康咨询示例：")
-        examples = self.user_guidance.get_examples_by_intent('advice')
-        for example in examples[:2]:
-            print(f"  • {example}")
-        
-        print("\n" + "="*60)
-    
-    def _show_statistics(self):
-        """显示系统统计信息"""
-        print("\n" + "="*50)
-        print("📊 系统统计信息")
-        print("="*50)
-        
-        # 容器统计
-        container_stats = self.container.get_statistics()
-        print("\n🔧 服务容器：")
-        for key, value in container_stats.items():
-            print(f"  • {key}: {value}")
-        
-        # 对话统计
-        dialog_state = self.state['dialog_state']
-        print("\n💬 对话状态：")
-        print(f"  • 当前意图: {dialog_state.current_intent.value if dialog_state.current_intent else 'None'}")
-        print(f"  • 意图置信度: {dialog_state.intent_confidence:.2f}")
-        print(f"  • 对话轮数: {len(dialog_state.turn_history)}")
-        print(f"  • 消息总数: {len(self.state['messages'])}")
-        
-        # 意图分布
-        intent_counts = {}
-        for turn in dialog_state.turn_history:
-            intent = turn.get('intent', 'unknown')
-            intent_counts[intent] = intent_counts.get(intent, 0) + 1
-        
-        if intent_counts:
-            print("\n🎯 意图分布：")
-            for intent, count in sorted(intent_counts.items(), key=lambda x: x[1], reverse=True):
-                print(f"  • {intent}: {count}")
-        
-        print("\n" + "="*50)
+        print("\n🔧 系统命令：")
+        print("- help: 显示此帮助")
+        print("- stats: 显示统计信息")
+        print("- health: 健康检查")
+        print("- reset: 重置对话")
+        print("- quit: 退出程序")
     
     def _perform_health_check(self):
         """执行系统健康检查"""
-        print("\n🔍 执行系统健康检查...")
+        print("\n🔍 系统健康检查中...")
         
-        health_results = self.container.health_check()
+        # 检查数据库连接
+        try:
+            from core.agent_protocol import DatabaseService
+            db_service = self.container.get(DatabaseService)
+            # 测试数据库连接
+            db_service.query_meals(limit=1)
+            print("  ✅ 数据库连接正常")
+        except Exception as e:
+            print(f"  ❌ 数据库连接失败: {str(e)}")
         
-        print("\n📋 检查结果：")
-        all_healthy = True
-        for service, status in health_results.items():
-            icon = "✅" if status else "❌"
-            print(f"  {icon} {service}: {'正常' if status else '异常'}")
-            if not status:
-                all_healthy = False
+        # 检查LLM服务
+        try:
+            llm_service = self.container.get(LLMService)
+            # 测试LLM调用
+            test_response = llm_service.generate_response("测试", "")
+            if test_response:
+                print("  ✅ LLM服务正常")
+            else:
+                print("  ⚠️ LLM服务响应为空")
+        except Exception as e:
+            print(f"  ❌ LLM服务异常: {str(e)}")
         
-        if all_healthy:
-            print("\n🎉 所有服务运行正常！")
-        else:
-            print("\n⚠️ 部分服务存在问题，可能影响功能使用")
+        # 检查轻量级规划器
+        try:
+            test_plan = self.planner.plan("测试输入", "")
+            if test_plan and test_plan.intent:
+                print("  ✅ 意图规划器正常")
+            else:
+                print("  ⚠️ 意图规划器响应异常")
+        except Exception as e:
+            print(f"  ❌ 意图规划器异常: {str(e)}")
+        
+        # 检查Agent工厂
+        try:
+            test_agent = self.agent_factory.create_agent("general")
+            if test_agent:
+                print("  ✅ Agent工厂正常")
+            else:
+                print("  ❌ Agent工厂创建失败")
+        except Exception as e:
+            print(f"  ❌ Agent工厂异常: {str(e)}")
+        
+        print("✅ 健康检查完成")
+    
+    def _show_statistics(self):
+        """显示系统统计信息"""
+        print("\n📊 系统统计信息：")
+        
+        # 对话统计
+        total_turns = len(self.state['dialog_state'].turn_history)
+        print(f"  💬 对话轮次：{total_turns}")
+        
+        if total_turns > 0:
+            # 意图分布统计
+            intent_counts = {}
+            agent_counts = {}
+            
+            for turn in self.state['dialog_state'].turn_history:
+                intent = turn.get('intent', 'unknown')
+                agent = turn.get('agent_used', 'unknown')
+                
+                intent_counts[intent] = intent_counts.get(intent, 0) + 1
+                agent_counts[agent] = agent_counts.get(agent, 0) + 1
+            
+            print("  🎯 意图分布：")
+            for intent, count in intent_counts.items():
+                print(f"    - {intent}: {count}")
+            
+            print("  🤖 Agent使用情况：")
+            for agent, count in agent_counts.items():
+                print(f"    - {agent}: {count}")
+        
+        # 数据库统计
+        try:
+            from core.agent_protocol import DatabaseService
+            db_service = self.container.get(DatabaseService)
+            
+            meals = db_service.query_meals(limit=1000)  # 获取最近1000条记录
+            exercises = db_service.query_exercises(limit=1000)
+            
+            print(f"  🍽️ 饮食记录数：{len(meals)}")
+            print(f"  🏃 运动记录数：{len(exercises)}")
+            
+        except Exception as e:
+            print(f"  ❌ 数据库统计失败: {str(e)}")
+        
+        # Token使用统计
+        try:
+            llm_service = self.container.get(LLMService)
+            token_usage = llm_service.token_usage_callback.get_usage()
+            print("  🔤 当前会话Token使用：")
+            print(f"    - 输入Token: {token_usage.get('total_prompt_tokens', 0)}")
+            print(f"    - 输出Token: {token_usage.get('total_completion_tokens', 0)}")
+            print(f"    - 总Token: {token_usage.get('total_tokens', 0)}")
+        except Exception as e:
+            print(f"  ❌ Token统计失败: {str(e)}")
     
     def _reset_conversation(self):
-        """重置对话"""
+        """重置对话状态"""
+        print("\n🔄 重置对话状态...")
+        
+        # 重置状态
         self.state = self._init_state()
-        print("\n🔄 对话历史已重置")
+        
+        # 重置Token统计
+        try:
+            llm_service = self.container.get(LLMService)
+            llm_service.token_usage_callback.reset()
+        except Exception:
+            pass
+        
+        print("✅ 对话已重置，可以开始新的会话")
 
 
 def parse_arguments():

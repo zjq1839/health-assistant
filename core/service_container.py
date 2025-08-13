@@ -5,7 +5,9 @@
 
 import os
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
+
+from langchain_core.outputs import LLMResult
 
 from .agent_protocol import (
     ServiceContainer, DatabaseService, LLMService, NutritionService,
@@ -13,6 +15,45 @@ from .agent_protocol import (
 )
 from .nutrition_service import StructuredNutritionService, LocalFoodDatabase, LocalExerciseDatabase
 from .lightweight_planner import LightweightPlanner, RuleBasedClassifier, LiteModelClassifier
+from langchain_community.chat_models import ChatZhipuAI
+from langchain_core.callbacks import BaseCallbackHandler
+from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import BaseMessage, AIMessage
+from utils.logger import logger
+from config import config as cfg
+from langchain_openai import ChatOpenAI
+
+
+class TokenUsageCallback(BaseCallbackHandler):
+    """A callback handler to calculate and log token usage."""
+
+    def __init__(self):
+        super().__init__()
+        self.total_prompt_tokens = 0
+        self.total_completion_tokens = 0
+        self.total_tokens = 0
+
+    def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
+        """Collect token usage from the LLM response."""
+        if response.llm_output and "token_usage" in response.llm_output:
+            token_usage = response.llm_output["token_usage"]
+            self.total_prompt_tokens += token_usage.get("prompt_tokens", 0)
+            self.total_completion_tokens += token_usage.get("completion_tokens", 0)
+            self.total_tokens += token_usage.get("total_tokens", 0)
+
+    def get_usage(self) -> Dict[str, int]:
+        """Get the total token usage."""
+        return {
+            "total_prompt_tokens": self.total_prompt_tokens,
+            "total_completion_tokens": self.total_completion_tokens,
+            "total_tokens": self.total_tokens,
+        }
+
+    def reset(self) -> None:
+        """Reset the token counters."""
+        self.total_prompt_tokens = 0
+        self.total_completion_tokens = 0
+        self.total_tokens = 0
 
 
 class OllamaLLMService(LLMService):
@@ -22,8 +63,9 @@ class OllamaLLMService(LLMService):
         # 延迟导入，避免循环依赖
         from agents.config import get_llm
         
-        self.llm = get_llm('extraction')
-        self.lite_llm = get_llm('classification', lite=True)
+        self.token_usage_callback = TokenUsageCallback()
+        self.llm = get_llm('extraction', callbacks=[self.token_usage_callback])
+        self.lite_llm = get_llm('classification', lite=True, callbacks=[self.token_usage_callback])
         
         # 导入日志
         from utils.logger import logger
@@ -94,18 +136,17 @@ class OllamaLLMService(LLMService):
         """意图分类"""
         try:
             prompt = f"""
-请分析以下文本的意图，从以下类别中选择：
-- RECORD_MEAL: 记录饮食
+核心功能注册表:
+- RECORD_MEAL: 记录餐食
 - RECORD_EXERCISE: 记录运动
-- QUERY_DATA: 查询数据
+- QUERY: 查询数据
 - GENERATE_REPORT: 生成报告
-- GET_ADVICE: 获取建议
-- UNKNOWN: 未知意图
+- ADVICE: 获取建议
 
-文本：{text}
-上下文：{context}
-
-请返回JSON格式：{{"intent": "类别", "confidence": 0.0-1.0}}
+其他功能:
+- 数据同步和备份
+- 智能分析和推荐
+- 多模态输入支持
 """
             
             response = self.lite_llm.invoke(prompt)
@@ -152,8 +193,9 @@ class ConfigurableServiceContainer(ServiceContainer):
                 },
                 'llm': {
                     'type': 'ollama',
-                    'model': 'qwen3:4b',
-                    'lite_model': 'qwen3:1.7b'
+                    'model': 'glm-4',
+                    'temperature': 0.1,
+                    'streaming': True
                 },
                 'nutrition': {
                     'type': 'local',
@@ -178,26 +220,32 @@ class ConfigurableServiceContainer(ServiceContainer):
             return self._load_config(None)
     
     def _setup_services(self):
-        """设置服务"""
-        # 注册数据库服务
-        if self.config['database']['type'] == 'sqlite':
-            db_path = self.config['database']['path']
+        """根据配置设置服务"""
+        # 1. 数据库服务
+        db_config = self.config.get('database', {})
+        if db_config.get('type') == 'sqlite':
+            db_path = db_config.get('path', 'data/health_assistant.db')
             # 确保目录存在
             Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-            
-            self.register_singleton(
+            self.register_factory(
                 DatabaseService,
                 lambda: SQLiteDatabaseService(db_path)
             )
+        else:
+            raise ValueError(f"Unsupported database type: {db_config.get('type')}")
         
-        # 注册LLM服务
-        if self.config['llm']['type'] == 'ollama':
-            self.register_singleton(
+        # 2. LLM服务
+        llm_config = self.config.get('llm', {})
+        if llm_config.get('type') == 'ollama':
+            self.register_factory(
                 LLMService,
                 lambda: OllamaLLMService()
             )
-        
-        # 注册营养服务
+        else:
+            raise ValueError(f"Unsupported LLM type: {llm_config.get('type')}")
+
+        # 3. 营养服务
+        db_service = self.get(DatabaseService)
         if self.config['nutrition']['type'] == 'local':
             food_db_path = self.config['nutrition']['food_db_path']
             exercise_db_path = self.config['nutrition']['exercise_db_path']
@@ -210,7 +258,7 @@ class ConfigurableServiceContainer(ServiceContainer):
                 exercise_db = LocalExerciseDatabase(exercise_db_path)
                 return StructuredNutritionService(food_db, exercise_db)
             
-            self.register_singleton(
+            self.register_factory(
                 NutritionService,
                 create_nutrition_service
             )
@@ -221,8 +269,8 @@ class ConfigurableServiceContainer(ServiceContainer):
             lite_classifier = LiteModelClassifier()
             
             # 直接创建 LLM 服务实例，避免循环依赖
-            llm_service = OllamaLLMService()
-            
+            llm_service = self.get(LLMService)
+
             return LightweightPlanner(
                 cache_size=self.config['planner']['cache_size'],
                 rule_classifier=rule_classifier,
@@ -230,7 +278,7 @@ class ConfigurableServiceContainer(ServiceContainer):
                 llm_service=llm_service
             )
         
-        self.register_singleton(
+        self.register_factory(
             LightweightPlanner,
             create_planner
         )

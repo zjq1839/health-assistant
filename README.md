@@ -1,359 +1,369 @@
-# 健康助手 - LangGraph 智能对话系统
+# 健康助手 V2
 
-一个基于 LangGraph 的智能健康管理助手，支持餐食记录、运动追踪、数据查询和健康报告生成。
+一个基于“轻量级规划 + 统一 Agent 协议 + 依赖注入”的命令行健康助手，支持记录餐食、记录运动、查询数据、生成报告与获取建议。项目默认使用 Ollama 本地大模型（ChatOllama），数据持久化采用 SQLite。
 
-## 🚀 功能特性
+## 功能特性
+- 🎯 统一意图与 Agent 映射：record_meal / record_exercise / query / generate_report / advice
+- 🧭 三级决策：规则 → 小模型 → 大模型 的轻量级规划器（LightweightPlanner）
+- 🤝 统一协议：所有 Agent 实现 AgentProtocol，复用 BaseAgent 的通用能力
+- 🧩 依赖注入：ServiceContainer 统一管理 Database/LLM/Nutrition 等服务
+- 🗃️ 数据库：SQLite 自动建表，记录饮食与运动明细
+- 🔤 Token 统计：自动收集并在 CLI 中展示本轮调用的 Token 用量
 
-### 核心功能
-- 📝 **餐食记录**：智能识别和记录用户的饮食信息
-- 🏃 **运动追踪**：记录运动类型、时长和强度
-- 📷 **图片识别**：通过 OCR 技术识别运动图片信息
-- 📊 **数据查询**：灵活查询历史记录
-- 📈 **健康报告**：基于 RAG 技术生成个性化健康分析
-
-### 系统优化
-- 🔄 **对话上下文管理**：智能限制消息历史，防止内存溢出
-- 🎯 **节点路由优化**：支持循环对话，流程可视化
-- 🛡️ **异常处理**：全面的错误捕获和用户友好的错误提示
-- ⚙️ **配置管理**：集中化配置，支持环境变量
-- 💾 **数据库扩展**：增强的表结构和索引优化
-- 🧪 **单元测试**：完整的测试覆盖和 CI/CD 流程
-- ⚡ **性能优化**：LLM 缓存、批处理和性能监控
-- 🎨 **用户体验**：输入验证、格式化输出和使用指导
-- 📊 **日志监控**：结构化日志和性能指标追踪
-
-## 📁 项目结构
-
+## 项目结构
 ```
 langchain_learn/
-├── agents/                 # 智能代理模块 (V2版本)
-│   ├── config.py          # LLM 配置
-│   ├── advice_agent_v2.py # 建议代理
-│   ├── dietary_agent_v2.py # 饮食记录代理
-│   ├── exercise_agent_v2.py # 运动记录代理
-│   ├── general_agent_v2.py # 通用代理
-│   ├── query_agent_v2.py  # 查询代理
-│   └── report_agent_v2.py # 报告生成代理
-├── core/                  # 核心模块
-│   ├── agent_protocol.py  # 代理协议和服务容器
-│   ├── database_service.py # 数据库服务
-│   ├── enhanced_state.py  # 增强状态管理
-│   ├── intent_recognizer.py # 意图识别
-│   ├── lightweight_planner.py # 轻量级规划器
-│   ├── llm_service.py     # LLM服务
-│   ├── nutrition_service.py # 营养服务
-│   └── service_container.py # 服务容器配置
-├── utils/                 # 工具模块
-│   ├── logger.py         # 日志系统
-│   ├── performance.py    # 性能优化
-│   └── user_experience.py # 用户体验
-├── tests/                 # 测试模块
-├── data/                  # 数据文件
-├── logs/                  # 日志文件
-├── rag_knowledge_base/    # RAG知识库
-├── config.py             # 全局配置
-├── config.yml            # YAML配置文件
-├── main_v2.py            # 主程序入口
-├── test_refactor.py      # 重构测试
-├── requirements.txt      # 依赖管理
-├── pytest.ini           # 测试配置
-├── .env.example          # 环境变量模板
-└── README.md             # 项目文档
+├── main_v2.py                  # 程序入口（CLI）
+├── agents/                     # 具体智能体（V2）
+│   ├── dietary_agent_v2.py     # 记录餐食
+│   ├── exercise_agent_v2.py    # 记录运动
+│   ├── query_agent_v2.py       # 查询数据
+│   ├── report_agent_v2.py      # 生成报告
+│   ├── advice_agent_v2.py      # 建议与问答
+│   ├── general_agent_v2.py     # 兜底通用
+│   └── config.py               # LLM 工厂（ChatOllama）
+├── core/
+│   ├── agent_protocol.py       # 协议、BaseAgent、AgentFactory、SQLite 实现
+│   ├── enhanced_state.py       # 会话状态（EnhancedState）
+│   ├── lightweight_planner.py  # 轻量级规划器（含规则/小模型）
+│   └── service_container.py    # 依赖注入容器（setup_container / get_container）
+├── utils/
+│   ├── user_experience.py      # 示例与引导
+│   └── logger.py               # 结构化日志
+├── config.py                   # Pydantic 配置（支持 .env / config.yml）
+├── config.yml                  # 可选 YAML 配置
+├── requirements.txt
+└── tests/                      # 单测（数据库、Agent 等）
 ```
 
-## 🛠️ 安装和配置
-
-### 1. 环境准备
-
+## 安装与准备
+1) 安装依赖
 ```bash
-# 安装依赖
 pip install -r requirements.txt
 ```
-
-### 2. 环境配置
-
+2) 安装并启动 Ollama（本地大模型）
+- 安装见 Ollama 官方文档
+- 预拉取默认模型（以 qwen3:32b 为例）：
 ```bash
-# 复制环境变量模板
+ollama pull qwen3:32b
+```
+3) 配置环境变量（可选，亦可改 config.yml）
+- 复制并编辑 .env（如不存在可新建）
+```bash
 cp .env.example .env
+```
+- 常用变量（与 config.py 对应）：
+```bash
+# LLM
+LLM_MODEL=qwen3:32b
+LLM_LITE_MODEL=qwen3:32b
+LLM_TEMPERATURE=0.0
 
-# 编辑 .env 文件，配置必要参数
-vim .env
+# 数据库
+DB_PATH=./diet.db
+
+# 对话/缓存
+MAX_MESSAGES=20
+ENABLE_CACHE=true
+CACHE_SIZE=100
 ```
 
-### 3. 数据库初始化
-
+## 运行
 ```bash
-# 运行程序会自动初始化数据库
 python main_v2.py
 ```
+启动后可使用命令：
+- help：查看使用指南与示例
+- stats：查看统计信息（对话轮次、意图分布、Agent 使用、Token 用量、数据条目）
+- health：执行健康检查（DB/LLM/Planner/Agent 工厂）
+- reset：重置会话
+- quit：退出
 
-## 🚀 使用方法
+示例交互：
+- “我早餐吃了鸡蛋和牛奶”（record_meal）
+- “我跑步30分钟”（record_exercise）
+- “查询我昨天的饮食记录”（query）
+- “生成本周健康报告”（generate_report）
+- “推荐一些健康食谱”（advice）
 
-### 基本使用
+## 使用详解
 
+### 命令行使用示例
+
+#### 启动与健康检查
 ```bash
-# 启动健康助手
-python main_v2.py
+$ python main_v2.py
+🏥 健康助手 V2 启动成功！
+💡 输入 'help' 查看使用指南，输入 'quit' 退出
+📊 输入 'stats' 查看系统统计信息
+--------------------------------------------------
 
-# 查看帮助信息
-python main_v2.py --help
+🔍 系统健康检查中...
+  ✅ 数据库连接正常
+  ✅ LLM服务正常
+  ✅ 意图规划器正常
+  ✅ Agent工厂正常
+✅ 健康检查完成
 
-# 启用调试模式
-python main_v2.py --debug
+👤 您：health
+🔍 系统健康检查中...
+  ✅ 数据库连接正常
+  ✅ LLM服务正常
+  ✅ 意图规划器正常
+  ✅ Agent工厂正常
+✅ 健康检查完成
 ```
 
-### 交互示例
-
+#### 统计信息展示
+```bash
+👤 您：stats
+📊 系统统计信息：
+  💬 对话轮次：5
+  🎯 意图分布：
+    - record_meal: 2
+    - record_exercise: 1
+    - query: 1
+    - generate_report: 1
+  🤖 Agent使用情况：
+    - dietary: 2
+    - exercise: 1
+    - query: 1
+    - report: 1
+  🍽️ 饮食记录数：8
+  🏃 运动记录数：3
+  🔤 当前会话Token使用：
+    - 输入Token: 1245
+    - 输出Token: 892
+    - 总Token: 2137
 ```
-👤 用户: 我今天早餐吃了鸡蛋和牛奶
-🤖 助手: ✅ 餐食记录添加成功
+
+#### 实际对话示例
+```bash
+👤 您：我早餐吃了鸡蛋和牛奶
+🤖 助手：✅ 餐食记录添加成功
 📅 日期：2024-01-15
 🍽️ 餐食类型：早餐
 📝 描述：鸡蛋和牛奶
 
-👤 用户: 我今天跑步30分钟
-🤖 助手: ✅ 运动记录添加成功
+👤 您：我跑步30分钟
+🤖 助手：✅ 运动记录添加成功
 📅 日期：2024-01-15
 🏃 运动类型：跑步
 ⏱️ 时长：30 分钟
+🔥 消耗热量：约 240 卡路里
 
-👤 用户: 今天吃了什么？
-🤖 助手: 找到 1 条记录：
+👤 您：查询我今天的饮食记录
+🤖 助手：📊 找到 1 条记录：
 --- 记录 1 ---
 📅 日期：2024-01-15
 🍽️ 餐食类型：早餐
 📝 描述：鸡蛋和牛奶
 ```
 
-## 🧪 测试
+### 配置项说明
 
-### 运行测试
+#### 环境变量 & config.py 对应表
 
+| 环境变量 | config.py 字段 | 默认值 | 说明 |
+|---------|---------------|-------|------|
+| **LLM 配置** |
+| `LLM_MODEL` | `llm.model` | `qwen3:32b` | 主要 LLM 模型名称 |
+| `LLM_LITE_MODEL` | `llm.lite_model` | `qwen3:32b` | 轻量级模型（意图分类用） |
+| `LLM_TEMPERATURE` | `llm.temperature` | `0.0` | 生成温度（0.0-1.0） |
+| **数据库配置** |
+| `DB_PATH` | `database.path` | `/home/zjq/document/langchain_learn/diet.db` | SQLite 数据库文件路径 |
+| **知识库配置** |
+| `KNOWLEDGE_BASE_PATH` | `knowledge_base.path` | `/home/zjq/document/langchain_learn/rag_knowledge_base` | RAG 知识库路径 |
+| `EMBEDDING_MODEL` | `knowledge_base.embedding_model` | `nn200433/text2vec-bge-large-chinese:latest` | 向量化模型 |
+| `VECTOR_SEARCH_K` | `vector_search.k` | `2` | 向量检索返回结果数 |
+| **对话配置** |
+| `MAX_MESSAGES` | `dialogue.max_messages` | `20` | 最大历史消息数 |
+| `IMMEDIATE_CONTEXT_SIZE` | `dialogue.immediate_context_size` | `3` | 即时上下文大小 |
+| `ENABLE_INTELLIGENT_TRUNCATION` | `dialogue.enable_intelligent_truncation` | `true` | 智能截断开关 |
+| `ENABLE_CONTEXT_COMPRESSION` | `dialogue.enable_context_compression` | `false` | 上下文压缩开关 |
+| **缓存配置** |
+| `ENABLE_CACHE` | `cache.enable` | `true` | 启用缓存 |
+| `CACHE_SIZE` | `cache.size` | `100` | 缓存大小 |
+| `CACHE_TYPE` | `cache.type` | `sqlite` | 缓存类型 |
+| `INTENT_CACHE_SIZE` | `cache.intent_cache_size` | `200` | 意图缓存大小 |
+| `INTENT_CACHE_TTL_HOURS` | `cache.intent_cache_ttl_hours` | `24` | 意图缓存过期时间（小时） |
+| **意图识别配置** |
+| `ENABLE_ENHANCED_RECOGNITION` | `intent.enable_enhanced_recognition` | `true` | 增强意图识别 |
+| `INTENT_CONFIDENCE_THRESHOLD` | `intent.confidence_threshold` | `0.7` | 意图识别置信度阈值 |
+| `ENABLE_CONTEXT_ENHANCEMENT` | `intent.enable_context_enhancement` | `true` | 上下文增强 |
+| `KEYWORD_WEIGHT` | `intent.keyword_weight` | `0.6` | 关键词权重 |
+| `LLM_WEIGHT` | `intent.llm_weight` | `0.4` | LLM 权重 |
+| `KEYWORD_DIRECT_RETURN_THRESHOLD` | `intent.keyword_direct_return_threshold` | `0.95` | 关键词直接返回阈值 |
+| `INTENT_LLM_TEMPERATURE` | `intent.llm_temperature` | `0.1` | 意图分类 LLM 温度 |
+| `INTENT_LLM_TIMEOUT_SECONDS` | `intent.llm_timeout_seconds` | `5` | 意图分类超时（秒） |
+| `LLM_MAX_RESPONSE_LENGTH` | `intent.llm_max_response_length` | `1024` | LLM 最大响应长度 |
+| **日志配置** |
+| `LOG_LEVEL` | `logging.level` | `INFO` | 日志级别 |
+| `LOG_FILE` | `logging.file` | `app.log` | 日志文件名 |
+
+## 测试
 ```bash
-# 运行所有测试
-pytest
-
-# 运行特定测试文件
-pytest tests/test_query_agent.py
-
-# 生成覆盖率报告
-pytest --cov=. --cov-report=html
+pytest -q
 ```
 
-## 📊 性能优化特性
+## 开发者指南
 
-### 1. LLM 缓存
-- 自动缓存 LLM 响应，减少重复调用
-- LRU 缓存策略，内存使用可控
-- 可通过配置开启/关闭
+### 如何新增一个 Agent
 
-### 2. 批处理
-- 数据库操作批处理，提升写入性能
-- 可配置批次大小和刷新间隔
-
-### 3. 性能监控
-- 函数执行时间监控
-- 内存使用追踪
-- 慢查询告警
-
-## 📝 日志系统
-
-### 日志级别
-- **INFO**：正常操作记录
-- **WARNING**：性能警告
-- **ERROR**：错误信息
-- **DEBUG**：调试信息
-
-### 日志输出
-- 控制台输出：彩色格式化
-- 文件输出：结构化 JSON 格式
-- 日志轮转：10MB 大小，保留 7 天
-
-## 🔧 配置说明
-
-### 环境变量
-
-```bash
-# LLM 配置
-LLM_MODEL_NAME=qwen2.5:7b
-LLM_LITE_MODEL_NAME=qwen2.5:1.5b
-LLM_BASE_URL=http://localhost:11434
-
-# 数据库配置
-DB_PATH=./health_data.db
-
-# 知识库配置
-KNOWLEDGE_BASE_PATH=./knowledge_base
-EMBEDDING_MODEL_NAME=nomic-embed-text
-
-# 性能配置
-VECTOR_SEARCH_K=3
-MAX_MESSAGES=20
-CACHE_SIZE=100
-ENABLE_CACHE=true
-
-# 日志配置
-LOG_LEVEL=INFO
-LOG_FILE=health_assistant.log
+#### 步骤 1：定义新意图类型
+在 <mcfile name="enhanced_state.py" path="core/enhanced_state.py"></mcfile> 中新增意图枚举：
+```python
+class IntentType(Enum):
+    # 现有意图...
+    NEW_FEATURE = "new_feature"  # 新增意图
 ```
 
-## 项目特色
+#### 步骤 2：创建 Agent 实现
+在 `agents/` 目录下创建新文件（如 `new_feature_agent_v2.py`）：
+```python
+from core.agent_protocol import BaseAgent, AgentResponse, AgentResult
+from core.enhanced_state import IntentType
 
-- **多代理协作 (Multi-Agent Collaboration):** 采用主控制器（Master Controller）和多个专家代理（Expert Agents）的模式，实现复杂任务的协同处理。
-- **高级RAG (Advanced RAG):** 结合了混合检索、重排和查询转换等技术，提供更精准、更可靠的知识问答。
-- **可扩展性:** 模块化的设计使得添加新的功能代理（如睡眠分析、心理健康等）变得简单。
-- **个性化服务:** 通过持续学习用户的健康数据，提供量身定制的建议。
-
-## 系统架构
-
-系统主要由以下几个部分组成：
-
-1.  **主控制器 (Master Controller):**
-    - 负责接收所有用户输入。
-    - 分析用户意图，并将任务分发给最合适的专家代理。
-
-2.  **专家代理 (Expert Agents):**
-    - **饮食分析代理 (Dietary Analysis Agent):** 处理所有与饮食相关的功能，包括记录、分析和生成报告。
-    - **运动健康代理 (Fitness & Health Agent):** 记录和分析用户的运动数据，提供健身建议。
-    - **知识问答代理 (Knowledge Q&A Agent):** 基于RAG技术，回答通用的健康问题。
-
-3.  **核心模块 (Core):**
-    - **状态管理 (State Management):** 在整个会话过程中维护一个统一的状态，方便不同代理之间共享信息。
-
-4.  **知识库 (Knowledge Base):**
-    - **营养知识库:** 包含食物营养成分、健康饮食指南等信息。
-    - **运动健康知识库:** 包含运动方案、健身动作指导等内容。
-    - **通用健康知识库:** 涵盖常见健康问题、医学知识等。
-
-5.  **数据存储 (Data Storage):**
-    - **用户数据:** 使用SQLite存储用户的饮食记录、运动记录等个人数据。
-    - **向量数据:** 使用FAISS存储知识库的向量表示，支持高效的相似度检索。
-
-## 技术栈
-
-- **LangChain:** 用于构建LLM应用的框架
-- **LangGraph:** 用于构建多代理系统的图结构
-- **Ollama:** 本地部署的大语言模型
-- **FAISS:** 高效的向量检索引擎
-- **SQLite:** 轻量级关系型数据库
-
-## 功能特性
-
-1. **饮食管理**
-   - 记录每日饮食
-   - 分析营养成分
-   - 生成饮食报告
-   - 提供个性化饮食建议
-
-2. **运动追踪**
-   - 记录运动类型和时长
-   - 计算消耗热量
-   - 制定运动计划
-   - 提供运动建议
-
-3. **健康问答**
-   - 回答健康相关问题
-   - 提供专业知识解释
-   - 支持上下文理解
-   - 多轮对话交互
-
-## 使用说明
-
-### 环境配置
-
-```bash
-# 克隆项目
-git clone [项目地址]
-
-# 安装依赖
-pip install -r requirements.txt
-
-# 安装并配置Ollama
-# 参考Ollama官方文档
-
-# 初始化数据库
-python init_db.py
+class NewFeatureAgentV2(BaseAgent):
+    def __init__(self, llm_service):
+        super().__init__(name="new_feature")
+        self.llm_service = llm_service
+    
+    def can_handle(self, intent: IntentType) -> bool:
+        return intent == IntentType.NEW_FEATURE
+    
+    def run(self, state: dict) -> AgentResponse:
+        # 实现具体逻辑
+        user_input = state['messages'][-1]['content']
+        
+        # 处理逻辑...
+        
+        return self._create_success_response(
+            message="新功能处理完成",
+            evidence={"processed": user_input}
+        )
 ```
 
-### 启动应用
+#### 步骤 3：注册到 AgentFactory
+在 <mcfile name="agent_protocol.py" path="core/agent_protocol.py"></mcfile> 的 <mcsymbol name="create_agent" filename="agent_protocol.py" path="core/agent_protocol.py" startline="239" type="function"></mcsymbol> 方法中添加：
+```python
+elif agent_name == "new_feature":
+    from agents.new_feature_agent_v2 import NewFeatureAgentV2
+    agent = NewFeatureAgentV2(
+        llm_service=self.container.get(LLMService)
+    )
+```
 
+#### 步骤 4：更新意图映射
+在 <mcfile name="common_parsers.py" path="utils/common_parsers.py"></mcfile> 的 <mcsymbol name="intent_to_agent_mapping" filename="common_parsers.py" path="utils/common_parsers.py" startline="230" type="function"></mcsymbol> 中添加：
+```python
+mapping = {
+    # 现有映射...
+    IntentType.NEW_FEATURE: "new_feature",
+}
+```
+
+#### 步骤 5：更新用户示例
+在 <mcfile name="user_experience.py" path="utils/user_experience.py"></mcfile> 中添加示例：
+```python
+def get_examples_by_intent(self, intent: str) -> List[str]:
+    examples = {
+        # 现有示例...
+        "new_feature": [
+            "触发新功能的示例输入",
+            "另一个示例"
+        ]
+    }
+```
+
+### 如何接入新的 LLM 服务
+
+#### 步骤 1：实现 LLMService 接口
+创建新的 LLM 服务实现（如在 <mcfile name="service_container.py" path="core/service_container.py"></mcfile> 中）：
+```python
+class CustomLLMService(LLMService):
+    def __init__(self, api_key: str, model_name: str):
+        self.api_key = api_key
+        self.model_name = model_name
+        self.token_usage_callback = TokenUsageCallback()
+        # 初始化您的 LLM 客户端
+    
+    def extract_entities(self, text: str, schema: Dict) -> Dict:
+        # 实现实体提取逻辑
+        pass
+    
+    def generate_response(self, prompt: str, context: str = "") -> str:
+        # 实现响应生成逻辑
+        pass
+    
+    def classify_intent(self, text: str, context: str = "") -> Dict:
+        # 实现意图分类逻辑
+        pass
+    
+    def invoke(self, prompt: str) -> Any:
+        # 实现直接调用逻辑
+        pass
+```
+
+#### 步骤 2：注册到服务容器
+在 <mcsymbol name="ConfigurableServiceContainer" filename="service_container.py" path="core/service_container.py" startline="174" type="class"></mcsymbol> 的 `_setup_services` 方法中添加：
+```python
+def _setup_services(self):
+    # 现有设置...
+    
+    # LLM服务
+    llm_config = self.config.get('llm', {})
+    if llm_config.get('type') == 'custom':
+        self.register_factory(
+            LLMService,
+            lambda: CustomLLMService(
+                api_key=llm_config.get('api_key'),
+                model_name=llm_config.get('model_name')
+            )
+        )
+    # elif 其他类型...
+```
+
+#### 步骤 3：更新配置
+在 <mcfile name="config.py" path="config.py"></mcfile> 或 `config.yml` 中添加相关配置字段：
+```python
+class LLMConfig(BaseModel):
+    model: str = Field(default='qwen3:32b', alias='LLM_MODEL')
+    # 新增字段
+    api_key: str = Field(default='', alias='LLM_API_KEY')
+    provider: str = Field(default='ollama', alias='LLM_PROVIDER')
+```
+
+#### 步骤 4：测试新服务
 ```bash
+# 设置环境变量
+export LLM_PROVIDER=custom
+export LLM_API_KEY=your_api_key
+
+# 运行健康检查
 python main_v2.py
+# 在 CLI 中输入：health
 ```
 
-### 基本使用
+### 架构扩展建议
 
-1. **记录饮食**
-   ```
-   > 早上吃了一个鸡蛋，一杯牛奶
-   已记录您的早餐
-   ```
+1. **新增数据源**：实现 `DatabaseService` 接口支持其他数据库
+2. **多模态输入**：扩展 `BaseAgent` 支持图片、语音输入
+3. **插件系统**：实现动态加载 Agent 的插件机制
+4. **监控仪表板**：基于统计数据创建 Web 界面
+5. **分布式部署**：将服务容器改造为微服务架构
 
-2. **查看饮食报告**
-   ```
-   > 生成今天的饮食报告
-   正在分析您的饮食情况...
-   ```
+## 关键设计
+- LightweightPlanner：规则优先，结合小模型辅助判别，降低延迟与成本
+- AgentProtocol + BaseAgent：统一 run/校验/日志/响应构造，便于测试与扩展
+- ServiceContainer：集中式依赖注入，提供 setup_container/get_container 便捷方法
+- SQLiteDatabaseService：首次运行自动建表，开箱即用
+- ChatOllama：通过 agents/config.get_llm 按任务类型动态配置温度与模型，并记录 Token 用量
 
-3. **记录运动**
-   ```
-   > 今天跑步半小时
-   已记录您的运动情况
-   ```
-
-4. **健康咨询**
-   ```
-   > 每天应该吃多少蛋白质？
-   根据一般建议...
-   ```
-
-## 项目结构
-
-```
-.
-├── main_v2.py             # 主程序入口（重构版）
-├── config.py              # 全局配置
-├── config.yml             # YAML配置文件
-├── test_refactor.py       # 重构测试
-├── agents/                # 智能代理模块（V2版本）
-├── core/                  # 核心模块（服务容器、协议等）
-├── utils/                 # 工具模块
-├── data/                  # 数据文件
-├── rag_knowledge_base/    # RAG知识库
-├── logs/                  # 日志文件
-└── tests/                 # 测试文件
-```
-
-## 开发计划
-
-- [ ] 添加更多专家代理（如睡眠分析、心理健康等）
-- [ ] 优化RAG检索效果
-- [ ] 增加数据可视化功能
-- [ ] 支持多用户管理
-- [ ] 添加API接口
-
-## 贡献指南
-
-1. Fork 本仓库
-2. 创建新的分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启一个 Pull Request
-
-## 项目分析
-
-### 优势
-- **智能交互**：通过多代理协作和高级 RAG，实现高效的任务处理和准确的知识检索。
-- **全面健康管理**：覆盖饮食、运动和健康问答，不局限于单一领域。
-- **技术先进**：集成最新 MCP 和 RAG 技术，提升系统复杂度和实用性。
-- **可扩展**：模块化设计便于未来扩展。
-
-### 挑战与改进
-- **性能优化**：LLM 调用可能导致延迟，可引入缓存机制。
-- **数据隐私**：加强用户数据保护。
-- **知识更新**：定期更新知识库以保持信息时效性。
-- **用户界面**：开发图形界面提升可用性。
+## 常见问题
+- 首次运行较慢：如本地模型未就绪，请先通过 ollama pull 拉取模型
+- 无法连接 LLM：确认 Ollama 已启动，或修改 .env 的 LLM_MODEL/LLM_LITE_MODEL
+- DB 路径权限：修改 DB_PATH 到可写目录
 
 ## 许可证
-
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
+MIT

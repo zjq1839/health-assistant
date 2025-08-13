@@ -4,6 +4,7 @@ from core.agent_protocol import BaseAgent, AgentResponse
 from core.enhanced_state import EnhancedState, IntentType
 from core.agent_protocol import LLMService
 from core.agent_protocol import DatabaseService
+from utils.common_parsers import parse_duration, parse_exercise_type, parse_date_from_text
 
 class ExerciseAgentV2(BaseAgent):
     """运动智能体 V2 - 处理运动记录和查询"""
@@ -20,7 +21,8 @@ class ExerciseAgentV2(BaseAgent):
         """处理运动相关请求"""
         try:
             # 获取用户的最后一条消息
-            last_user_msg = state.messages[-1] if state.messages else {}
+            messages = state.get('messages', [])
+            last_user_msg = messages[-1] if messages else {}
             user_content = last_user_msg.get('content', '')
             
             # 检查是否包含图片路径
@@ -42,83 +44,64 @@ class ExerciseAgentV2(BaseAgent):
     
     def _extract_and_record_exercise(self, state: EnhancedState, content: str) -> AgentResponse:
         """提取并记录运动信息"""
-        prompt = f"""请从以下文本中提取运动信息：
-
-文本：{content}
-
-请提取以下信息并以JSON格式返回：
-{{
-    "exercise_type": "运动类型（如跑步、游泳、健身等）",
-    "duration": "运动时长（分钟，数字）",
-    "description": "运动描述"
-}}
-
-如果无法确定某项信息，请使用合理的默认值。"""
-        
         try:
-            # 调用 LLM 提取运动信息
-            response = self.llm_service.generate_response(prompt, "")
+            # 解析运动时长
+            duration = parse_duration(content)
             
-            # 解析 LLM 响应（这里简化处理，实际应该解析 JSON）
-            exercise_type = "其他运动"
-            duration = 30  # 默认30分钟
-            description = content
+            # 解析运动类型
+            exercise_type = parse_exercise_type(content)
             
             # 记录到数据库
-            self._record_exercise_to_db(exercise_type, duration, description)
+            self._record_exercise_to_db(exercise_type, duration, content)
             
             # 回复用户
             reply = f"✅ 已记录您的{exercise_type}，持续时间：{duration}分钟"
-            state.add_message("assistant", reply)
             
             return self._create_success_response(reply)
             
         except Exception as e:
             error_msg = f"提取运动信息时发生错误：{str(e)}"
             return self._create_error_response(error_msg)
-    
-    def _process_exercise_image(self, state: EnhancedState, image_path: str) -> AgentResponse:
-        """处理运动图片"""
-        # 简化处理，实际应该使用 OCR
-        reply = f"📸 已接收到运动图片：{image_path}，但OCR功能暂未实现。请直接描述您的运动内容。"
-        state.add_message("assistant", reply)
-        return self._create_success_response(reply)
-    
+
     def _query_exercise_records(self, state: EnhancedState) -> AgentResponse:
         """查询运动记录"""
         try:
-            # 这里应该从数据库查询运动记录
-            reply = "📊 正在查询您的运动记录...\n\n暂无运动记录数据。请先记录一些运动信息。"
-            state.add_message("assistant", reply)
+            # 从用户内容解析日期（支持 今天/昨天/前天），默认为今天
+            messages = state.get('messages', [])
+            last_user_msg = messages[-1] if messages else {}
+            content = last_user_msg.get('content', '')
+            today = datetime.date.today()
+            d = parse_date_from_text(content, base_date=today)
+            date = (d or today).isoformat()
+
+            records = self.db_service.query_exercises(date, limit=50)
+            
+            if not records:
+                reply = f"📊 {date} 暂无运动记录。您可以说：'我跑步30分钟' 来记录。"
+            else:
+                lines = [f"📅 日期：{date}", "🏃 运动记录："]
+                for r in records:
+                    lines.append(f"- {r.get('exercise_type','未知')}，时长{r.get('duration',0)}分钟：{r.get('description','')}")
+                reply = "\n".join(lines)
             return self._create_success_response(reply)
             
         except Exception as e:
             error_msg = f"查询运动记录时发生错误：{str(e)}"
             return self._create_error_response(error_msg)
-    
+
     def _record_exercise_to_db(self, exercise_type: str, duration: int, description: str):
         """记录运动到数据库"""
         try:
-            # 这里应该调用数据库服务记录运动
-            # self.db_service.save_exercise({...})
-            pass
+            self.db_service.save_exercise({
+                'exercise_type': exercise_type,
+                'duration': duration,
+                'description': description,
+            })
         except Exception as e:
             print(f"记录运动到数据库失败：{e}")
     
-    def _create_success_response(self, message: str) -> AgentResponse:
-        """创建成功响应"""
-        from core.agent_protocol import AgentResponse, AgentResult
-        return AgentResponse(
-            status=AgentResult.SUCCESS,
-            message=message,
-            data={}
-        )
-    
-    def _create_error_response(self, error_msg: str) -> AgentResponse:
-        """创建错误响应"""
-        from core.agent_protocol import AgentResponse, AgentResult
-        return AgentResponse(
-            status=AgentResult.ERROR,
-            message=error_msg,
-            data={}
-        )
+    def _process_exercise_image(self, state: EnhancedState, image_path: str) -> AgentResponse:
+        """处理运动图片"""
+        # 简化处理，实际应该使用 OCR
+        reply = f"📸 已接收到运动图片：{image_path}，但OCR功能暂未实现。请直接描述您的运动内容。"
+        return self._create_success_response(reply)

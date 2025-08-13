@@ -11,7 +11,6 @@ class IntentType(Enum):
     RECORD_EXERCISE = "record_exercise"
     GENERATE_REPORT = "generate_report"
     QUERY = "query"
-    QUERY_DATA = "query_data"
     ADVICE = "advice"  
     UNKNOWN = "unknown"
 
@@ -67,26 +66,11 @@ class DialogState:
         return context_entities
 
 class EnhancedState(TypedDict):
-    """增强的状态定义"""
+    """增强的状态定义（精简版）"""
     messages: Annotated[list, add_messages]
-    docs: list
-    intent: Literal["record_meal", "record_exercise", "generate_report", "query", "query_data", "advice", "unknown"]
-    meal_type: str
-    meal_description: str
-    meal_date: str
-    exercise_type: str
-    exercise_duration: int
-    exercise_description: str
-    report_date: str
-    full_meal_description: str
-    full_exercise_description: str
-    next_agent: str
-    query_date: str
-    query_type: str
-    # 新增字段
+    intent: Literal["record_meal", "record_exercise", "generate_report", "query", "advice", "unknown"]
+    # 核心字段保留
     dialog_state: DialogState
-    context_summary: str
-    intent_confidence: float
     turn_id: int
 
 class ContextManager:
@@ -195,22 +179,7 @@ def create_enhanced_state() -> EnhancedState:
     """创建增强状态实例"""
     return {
         'messages': [],
-        'docs': [],
         'intent': 'unknown',
-        'meal_type': '',
-        'meal_description': '',
-        'meal_date': '',
-        'exercise_type': '',
-        'exercise_duration': 0,
-        'exercise_description': '',
-        'report_date': '',
-        'full_meal_description': '',
-        'full_exercise_description': '',
-        'next_agent': '',
-        'query_date': '',
-        'query_type': '',
         'dialog_state': DialogState(),
-        'context_summary': '',
-        'intent_confidence': 0.0,
         'turn_id': 0
     }

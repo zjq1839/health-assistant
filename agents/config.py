@@ -3,6 +3,8 @@ from config import config
 from langchain_community.cache import SQLiteCache
 from langchain.globals import set_llm_cache
 import os
+from typing import List
+from langchain_core.callbacks import BaseCallbackHandler
 
 # Set up caching
 if config.cache.enable:
@@ -17,8 +19,6 @@ llm = ChatOllama(model=config.llm.model, temperature=config.llm.temperature)
 llm_lite = ChatOllama(model=config.llm.lite_model, temperature=config.llm.temperature)
 
 # ---- Dynamic LLM factory ----
-from functools import lru_cache
-
 _TASK_TEMPERATURES = {
     'extraction': 0.0,      # 结构化信息抽取
     'classification': 0.2,  # 分类/路由判断
@@ -26,9 +26,8 @@ _TASK_TEMPERATURES = {
     'default': config.llm.temperature
 }
 
-@lru_cache(maxsize=16)
-def get_llm(task_type: str = 'default', lite: bool = False) -> ChatOllama:
-    """根据任务类型动态返回 LLM 实例，并做简单缓存。"""
+def get_llm(task_type: str = 'default', lite: bool = False, callbacks: List[BaseCallbackHandler] = None) -> ChatOllama:
+    """根据任务类型动态返回 LLM 实例。"""
     temperature = _TASK_TEMPERATURES.get(task_type, _TASK_TEMPERATURES['default'])
     model_name = config.llm.lite_model if lite else config.llm.model
-    return ChatOllama(model=model_name, temperature=temperature)
+    return ChatOllama(model=model_name, temperature=temperature, callbacks=callbacks)

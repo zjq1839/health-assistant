@@ -14,6 +14,8 @@ from .enhanced_state import IntentType, EnhancedState
 from core.intent_recognizer import IntentCache
 from agents.config import get_llm
 from utils.logger import logger
+from utils.common_parsers import intent_to_agent_mapping
+from config import config
 
 
 @dataclass
@@ -44,10 +46,12 @@ class RuleBasedClassifier:
     # 预编译正则表达式，提升性能
     INTENT_PATTERNS = {
         IntentType.RECORD_MEAL: [
-            re.compile(r'(我|今天|昨天|刚才).*(吃了|喝了)', re.IGNORECASE),
+            # 修改此规则，避免与"吃了什么"等查询冲突
+            re.compile(r'(我|今天|昨天|刚才).*(吃了|喝了)(?!.*(什么|吗|呢))', re.IGNORECASE),
             re.compile(r'(早餐|午餐|晚餐|夜宵)', re.IGNORECASE),
             re.compile(r'记录.*饮食', re.IGNORECASE),
-            re.compile(r'(鸡蛋|牛奶|米饭|面条|面包|水果)', re.IGNORECASE),
+            re.compile(r'(鸡蛋|牛奶|米饭|面条|面包|水果|苹果|香蕉|橙子|土豆|胡萝卜|白菜|肉|鱼|虾)', re.IGNORECASE),
+            re.compile(r'吃.*[的了]', re.IGNORECASE),  # 新增：匹配"吃了"、"吃的"等模式
         ],
         IntentType.RECORD_EXERCISE: [
             re.compile(r'(我|今天|昨天|刚才).*(跑步|游泳|健身|锻炼)', re.IGNORECASE),
@@ -56,10 +60,12 @@ class RuleBasedClassifier:
             re.compile(r'(图片|截图|识别).*运动', re.IGNORECASE),
         ],
         IntentType.QUERY: [
-            re.compile(r'(查询|查看|显示).*(记录|数据)', re.IGNORECASE),
+            # 增强查询规则，加入"搜索"、"吗"等关键词
+            re.compile(r'(查询|查看|显示|搜索).*(记录|数据)', re.IGNORECASE),
             re.compile(r'.*吃了什么', re.IGNORECASE),
             re.compile(r'.*做了什么运动', re.IGNORECASE),
-            re.compile(r'(昨天|前天|那天)呢?$', re.IGNORECASE),
+            # 移除过于宽泛的"昨天呢"匹配，改为在_context_enhanced_classification中处理
+            re.compile(r'.*吗\??$', re.IGNORECASE), # 只处理"...吗"等问句
         ],
         IntentType.GENERATE_REPORT: [
             re.compile(r'生成.*报告', re.IGNORECASE),
@@ -103,7 +109,19 @@ class RuleBasedClassifier:
             
             if matches > 0:
                 # 归一化分数：匹配数量 / 总模式数量
-                scores[intent] = score / len(patterns)
+                base_score = score / len(patterns)
+                
+                # 改进的置信度计算
+                # 1. 文本长度权重（短文本匹配可能更准确）
+                words = text.split()
+                length_weight = min(1.0, 20 / len(words)) if len(words) > 0 else 1.0
+                
+                # 2. 匹配质量权重（多个模式匹配更可靠）
+                quality_weight = min(1.0, matches / 2)  # 2个或以上匹配给满分
+                
+                # 3. 最终分数
+                final_score = base_score * length_weight * quality_weight
+                scores[intent] = final_score
         
         # 上下文增强
         if context and not scores:
@@ -115,15 +133,15 @@ class RuleBasedClassifier:
             best_intent = max(scores, key=scores.get)
             confidence = scores[best_intent]
             
-            # 提高规则引擎的置信度
-            enhanced_confidence = min(confidence + 0.6, 1.0)  # 增加置信度但不超过1.0
+            # 更保守的置信度增强（避免过度自信）
+            enhanced_confidence = min(confidence + 0.3, 0.85)  # 最高0.85，避免过度自信
             
-            # 规则引擎的高置信度阈值
-            if enhanced_confidence >= 0.5:  # 至少匹配一半的模式
+            # 调整阈值，要求更高的基础置信度
+            if enhanced_confidence >= 0.6:  # 提高阈值到0.6
                 return PlanResult(
                     intent=best_intent,
                     confidence=enhanced_confidence,
-                    agent=self._intent_to_agent(best_intent),
+                    agent=intent_to_agent_mapping(best_intent),
                     method="rule",
                     processing_time=processing_time
                 )
@@ -148,18 +166,6 @@ class RuleBasedClassifier:
                 scores[IntentType.QUERY] = 0.8
         
         return scores
-    
-    def _intent_to_agent(self, intent: IntentType) -> str:
-        """意图到代理的映射"""
-        mapping = {
-            IntentType.RECORD_MEAL: "dietary",
-            IntentType.RECORD_EXERCISE: "exercise",
-            IntentType.QUERY: "query",
-            IntentType.GENERATE_REPORT: "report",
-            IntentType.ADVICE: "advice",
-            IntentType.UNKNOWN: "general"
-        }
-        return mapping.get(intent, "general")
 
 
 class LiteModelClassifier:
@@ -195,7 +201,7 @@ class LiteModelClassifier:
             return PlanResult(
                 intent=result['intent'],
                 confidence=result['confidence'],
-                agent=self._intent_to_agent(result['intent']),
+                agent=intent_to_agent_mapping(result['intent']),
                 method="lite_model",
                 processing_time=processing_time,
                 entities=result.get('entities', {})
@@ -252,18 +258,6 @@ class LiteModelClassifier:
                 'confidence': 0.0,
                 'entities': {}
             }
-    
-    def _intent_to_agent(self, intent: IntentType) -> str:
-        """意图到代理的映射"""
-        mapping = {
-            IntentType.RECORD_MEAL: "dietary",
-            IntentType.RECORD_EXERCISE: "exercise",
-            IntentType.QUERY: "query",
-            IntentType.GENERATE_REPORT: "report",
-            IntentType.ADVICE: "advice",
-            IntentType.UNKNOWN: "general"
-        }
-        return mapping.get(intent, "general")
 
 
 class LightweightPlanner:
@@ -300,19 +294,29 @@ class LightweightPlanner:
             'cache_hits': 0
         }
     
-    def plan(self, user_input: str, context: str = "") -> PlanResult:
-        """智能规划，选择最优决策路径"""
+    def plan(self, user_input: str, context: str = "", state: Optional[EnhancedState] = None) -> PlanResult:
+        """智能规划，选择最优决策路径；当配置启用 llm-only 时，直接用LLM结合state识别意图"""
+        logger.debug(
+            f"Starting planning for user_input: '{user_input[:30]}...' with context: '{context[:50]}...'"
+        )
         start_time = time.time()
-        
+
+        # 0. LLM-only 模式：绕过规则与小模型
+        if getattr(config.intent, 'llm_only_mode', False):
+            return self._llm_intent_with_state(user_input, context, state, start_time)
+
         # 1. 缓存查询（最快路径）
         cached_result = self.cache.get(user_input, context)
         if cached_result:
             self.stats['cache_hits'] += 1
             intent, confidence, entities = cached_result
+            logger.info(
+                f"Cache hit for '{user_input[:30]}...'. Intent: {intent.value}, Confidence: {confidence:.2f}"
+            )
             return PlanResult(
                 intent=intent,
                 confidence=confidence,
-                agent=self._intent_to_agent(intent),
+                agent=intent_to_agent_mapping(intent),
                 method="cache",
                 processing_time=time.time() - start_time,
                 entities=entities
@@ -320,7 +324,11 @@ class LightweightPlanner:
         
         # 2. 规则引擎（快速路径）
         rule_result = self.rule_classifier.classify(user_input, context)
-        if rule_result.confidence >= 0.5:  # 高置信度
+        logger.debug(
+            f"Rule engine result for '{user_input[:30]}...': Intent: {rule_result.intent.value}, Confidence: {rule_result.confidence:.2f}"
+        )
+        # 使用可配置阈值
+        if rule_result.confidence >= getattr(config.intent, 'rule_confidence_threshold', 0.6):  # 高置信度
             self.stats['rule_hits'] += 1
             self._cache_result(user_input, context, rule_result)
             logger.info(f"Rule engine hit: {rule_result.intent.value} (confidence: {rule_result.confidence:.2f})")
@@ -328,7 +336,11 @@ class LightweightPlanner:
         
         # 3. 小模型（中等路径）
         lite_result = self.lite_classifier.classify(user_input, context)
-        if lite_result.confidence >= 0.6:  # 中等置信度
+        logger.debug(
+            f"Lite model result for '{user_input[:30]}...': Intent: {lite_result.intent.value}, Confidence: {lite_result.confidence:.2f}"
+        )
+        # 使用可配置阈值
+        if lite_result.confidence >= getattr(config.intent, 'lite_confidence_threshold', 0.65):  # 中等置信度
             self.stats['lite_hits'] += 1
             self._cache_result(user_input, context, lite_result)
             logger.info(f"Lite model hit: {lite_result.intent.value} (confidence: {lite_result.confidence:.2f})")
@@ -340,6 +352,138 @@ class LightweightPlanner:
         self._cache_result(user_input, context, llm_result)
         logger.info(f"LLM fallback: {llm_result.intent.value} (confidence: {llm_result.confidence:.2f})")
         return llm_result
+
+    def _llm_intent_with_state(self, user_input: str, context: str, state: Optional[EnhancedState], start_time: float) -> PlanResult:
+        """直接通过大模型进行意图识别，并可利用 EnhancedState 提供的上下文与当前意图。"""
+        # 构造更丰富的上下文
+        dialog_summary = ""
+        recent_intents = []
+        entities = {}
+        turn_id = None
+        has_meaningful_context = False
+        ds = None
+        
+        if state and getattr(config.intent, 'state_enhanced_llm', True):
+            try:
+                ds = state.get('dialog_state')
+                turn_id = state.get('turn_id')
+                if ds:
+                    # 收集最近意图与实体
+                    try:
+                        recent_intents = [i.value for i in ds.get_recent_intents() if i and i != IntentType.UNKNOWN]
+                    except Exception:
+                        recent_intents = []
+                    try:
+                        entities = ds.get_context_entities() or {}
+                    except Exception:
+                        entities = {}
+                    try:
+                        # 如果 EnhancedState 提供 summary，优先使用
+                        if hasattr(ds, 'context_summary') and ds.context_summary:
+                            dialog_summary = ds.context_summary
+                    except Exception:
+                        pass
+                    
+                    # 判断是否有有意义的上下文
+                    has_meaningful_context = (
+                        bool(recent_intents) or 
+                        bool(entities) or 
+                        bool(dialog_summary) or
+                        ('饮食' in context or '吃' in context or '运动' in context or '锻炼' in context)
+                    )
+            except Exception:
+                pass
+
+        # 特殊处理：如果是"昨天呢"类似的查询，但没有有意义的上下文，直接返回unknown
+        if re.search(r'(昨天|前天|那天)呢?$', user_input, re.IGNORECASE):
+            if not has_meaningful_context:
+                return PlanResult(
+                    intent=IntentType.UNKNOWN,
+                    confidence=0.95,
+                    agent="general",
+                    method="llm_only",
+                    processing_time=time.time() - start_time
+                )
+
+        # 生成带有历史意图标注的对话上下文块
+        annotated_history_block = ""
+        # 优先从 DialogState.turn_history 生成用户消息 + 意图标注
+        try:
+            if ds and hasattr(ds, 'get_recent_turns'):
+                recent_turns = ds.get_recent_turns(5)
+                if recent_turns:
+                    lines = []
+                    for t in recent_turns:
+                        intent_val = t.intent.value if getattr(t, 'intent', None) else 'unknown'
+                        try:
+                            conf_val = f"{t.confidence:.2f}"
+                        except Exception:
+                            conf_val = ""
+                        conf_part = f", 置信度: {conf_val}" if conf_val else ""
+                        # 在用户消息后面追加识别出的意图类型
+                        lines.append(f"用户: {t.user_input} （识别意图: {intent_val}{conf_part}）")
+                    if lines:
+                        annotated_history_block = "对话上下文（含历史意图）:\n" + "\n".join(lines)
+        except Exception:
+            pass
+
+        # 拼装提示词
+        context_block = f"上下文: {context}" if context else ""
+        intents_block = f"最近意图: {', '.join(recent_intents)}" if recent_intents else ""
+        entities_block = f"上下文实体: {entities}" if entities else ""
+        # 将带意图标注的历史对话一起加入提示词
+        extra_block = "\n".join([b for b in [intents_block, annotated_history_block] if b])
+
+        prompt = f"""你是意图识别专家。请基于用户输入以及给定的state上下文，输出JSON。
+
+{extra_block}
+用户输入: {user_input}
+
+意图类型:
+- record_meal: 记录饮食信息
+- record_exercise: 记录运动信息
+- query: 查询历史记录、包括查询饮食记录和运动记录
+- generate_report: 生成健康报告
+- advice: 寻求健康建议
+- unknown: 无法确定意图
+
+注意：如果用户进行模糊查询，但没有明确的上下文（如最近没有饮食或运动相关对话），应该识别为unknown。
+
+返回格式:
+{{
+  "intent": "意图类型",
+  "confidence": 0.9,
+  "entities": {{"key": "value"}},
+  "reasoning": "简要说明"
+}}
+
+只返回JSON，不要其他内容："""
+        try:
+            print(prompt)
+            response = self.llm.invoke(prompt)
+            result = self._parse_llm_response(response.content)
+            # 命中计数
+            self.stats['llm_hits'] += 1
+            plan = PlanResult(
+                intent=result['intent'],
+                confidence=result['confidence'],
+                agent=intent_to_agent_mapping(result['intent']),
+                method="llm_only",
+                processing_time=time.time() - start_time,
+                entities=result.get('entities', {})
+            )
+            # 根据置信度决定是否写入缓存
+            self._cache_result(user_input, context, plan)
+            return plan
+        except Exception as e:
+            logger.error(f"LLM intent with state failed: {e}")
+            return PlanResult(
+                intent=IntentType.UNKNOWN,
+                confidence=0.0,
+                agent="general",
+                method="llm_only",
+                processing_time=time.time() - start_time
+            )
     
     def _fallback_to_llm(self, user_input: str, context: str) -> PlanResult:
         """大模型兜底处理"""
@@ -375,7 +519,7 @@ class LightweightPlanner:
             return PlanResult(
                 intent=result['intent'],
                 confidence=result['confidence'],
-                agent=self._intent_to_agent(result['intent']),
+                agent=intent_to_agent_mapping(result['intent']),
                 method="llm",
                 processing_time=time.time() - start_time,
                 entities=result.get('entities', {})
@@ -423,18 +567,6 @@ class LightweightPlanner:
                 entities=result.entities or {},
                 context=context
             )
-    
-    def _intent_to_agent(self, intent: IntentType) -> str:
-        """意图到代理的映射"""
-        mapping = {
-            IntentType.RECORD_MEAL: "dietary",
-            IntentType.RECORD_EXERCISE: "exercise",
-            IntentType.QUERY: "query",
-            IntentType.GENERATE_REPORT: "report",
-            IntentType.ADVICE: "advice",
-            IntentType.UNKNOWN: "general"
-        }
-        return mapping.get(intent, "general")
     
     def get_performance_stats(self) -> Dict:
         """获取性能统计"""

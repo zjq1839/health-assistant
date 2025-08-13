@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from typing import Dict, Any
 
-from core.agent_protocol import BaseAgent
+from core.agent_protocol import BaseAgent, AgentResponse
 from core.enhanced_state import EnhancedState, IntentType
 from core.agent_protocol import LLMService
 
@@ -87,21 +87,3 @@ class AdviceAgentV2(BaseAgent):
             
         except Exception as e:
             return f"生成建议时发生错误：{str(e)}"
-    
-    def _create_success_response(self, message: str) -> AgentResponse:
-        """创建成功响应"""
-        from core.agent_protocol import AgentResponse, AgentResult
-        return AgentResponse(
-            status=AgentResult.SUCCESS,
-            message=message,
-            data={}
-        )
-    
-    def _create_error_response(self, error_msg: str) -> AgentResponse:
-        """创建错误响应"""
-        from core.agent_protocol import AgentResponse, AgentResult
-        return AgentResponse(
-            status=AgentResult.ERROR,
-            message=error_msg,
-            data={}
-        )
