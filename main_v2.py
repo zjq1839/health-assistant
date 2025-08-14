@@ -11,18 +11,18 @@ import sys
 import re
 import argparse
 from pathlib import Path
-from typing import Dict, Any
 
 # 添加项目根目录到路径
 sys.path.append(str(Path(__file__).parent))
 
-from core.service_container import setup_container, get_container, LLMService
+from core.service_container import setup_container, LLMService
 from core.agent_protocol import AgentFactory, AgentResponse, AgentResult
 from core.lightweight_planner import LightweightPlanner, PlanResult
 from core.enhanced_state import EnhancedState, DialogState, IntentType
 from utils.logger import logger
 from utils.user_experience import UserGuidance
 from utils.common_parsers import intent_to_agent_mapping
+from core.multi_requirement_parser import MultiRequirementParser
 
 
 class HealthAssistantV2:
@@ -49,18 +49,25 @@ class HealthAssistantV2:
         # 用户指南
         self.user_guidance = UserGuidance()
         
+        # 多需求解析器
+        try:
+            llm = self.container.get(LLMService)
+        except Exception as e:
+            logger.warning(f"LLMService unavailable for multi-requirement parser: {e}, using fallback parser without LLM")
+            llm = None
+        self.multi_req_parser = MultiRequirementParser(llm)
+
+        
         logger.info("HealthAssistantV2 initialized successfully")
     
     def _init_state(self) -> EnhancedState:
         """初始化增强状态（精简版）"""
         return {
             'messages': [],
-            'intent': None,
             'dialog_state': DialogState(
                 current_intent=None,
                 intent_confidence=0.0,
                 entities={},
-                context_summary="",
                 turn_history=[]
             ),
             'turn_id': 0
@@ -130,7 +137,7 @@ class HealthAssistantV2:
         plan_result = self.planner.plan(user_input, self._get_context(), self.state)
         
         logger.info(
-            f"Intent planning completed",
+            "Intent planning completed",
             extra={
                 'user_input': user_input[:50],
                 'intent': plan_result.intent.value if plan_result.intent else None,
@@ -151,7 +158,7 @@ class HealthAssistantV2:
             logger.warning(f"Invalid entities in plan_result: {plan_result.entities}")
         
         # 4. 选择合适的Agent
-        agent_name = self._select_agent(plan_result)
+        agent_name = self._select_agent(plan_result, user_input)
         
         # 5. 创建Agent并执行
         try:
@@ -165,8 +172,8 @@ class HealthAssistantV2:
         # 6. 验证Agent是否能处理该意图
         if plan_result.intent and not agent.can_handle(plan_result.intent):
             logger.warning(f"Agent {agent_name} cannot handle intent {plan_result.intent}")
-            # 降级到通用Agent
-            agent = self.agent_factory.create_agent("general")
+            # 降级到通用Agent -> 使用建议Agent替代已移除的general
+            agent = self.agent_factory.create_agent("advice")
         
         # 7. 执行Agent
         try:
@@ -227,11 +234,25 @@ class HealthAssistantV2:
             data={}
         )
     
-    def _select_agent(self, plan_result: PlanResult) -> str:
+    def _select_agent(self, plan_result: PlanResult, user_input: str) -> str:
         """根据规划结果选择Agent"""
         if not plan_result.intent:
-            return "general"
+            return "advice"
         
+        # 优先检测是否为多需求查询：当识别出多个需求时，统一路由到 multi_requirement_advice
+        # 该 Agent 支持 ADVICE/QUERY/GENERATE_REPORT 三类复合咨询场景
+        if self.multi_req_parser is not None:
+            try:
+                parse_result = self.multi_req_parser.parse(user_input or "")
+                req_count = len(getattr(parse_result, 'requirements', []) or [])
+                if req_count >= 2:
+                    allowed_for_multi = {IntentType.ADVICE, IntentType.QUERY, IntentType.GENERATE_REPORT}
+                    if plan_result.intent in allowed_for_multi:
+                        return "multi_requirement_advice"
+            except Exception:
+                # 解析失败时，回退到默认映射
+                pass
+
         # 使用统一的意图到Agent映射
         return intent_to_agent_mapping(plan_result.intent)
     
@@ -252,8 +273,7 @@ class HealthAssistantV2:
             user_input=user_input,
             intent=intent,
             confidence=confidence,
-            entities=self.state['dialog_state'].entities.copy(),
-            context_used=[]
+            entities=self.state['dialog_state'].entities.copy()
         )
         # 更新 turn_id
         self.state['turn_id'] = turn_obj.turn_id
@@ -286,7 +306,7 @@ class HealthAssistantV2:
         
         # 显示证据信息（如果有）
         if response.evidence and len(response.evidence) > 0:
-            print(f"\n📋 数据来源：")
+            print("\n📋 数据来源：")
             for i, evidence in enumerate(response.evidence[:3], 1):  # 最多显示3个证据
                 confidence_bar = "█" * int(evidence['confidence'] * 10)
                 print(f"  {i}. {evidence['source']}: {evidence['content'][:50]}... (置信度: {confidence_bar})")
@@ -298,19 +318,13 @@ class HealthAssistantV2:
         if response.data and 'warnings' in response.data:
             warnings = response.data['warnings']
             if warnings and isinstance(warnings, dict):
-                print(f"\n⚠️ 注意事项：")
+                print("\n⚠️ 注意事项：")
                 for field, warning in warnings.items():
                     print(f"  • {warning}")
 
         # 显示Token使用情况
         llm_service = self.container.get(LLMService)
-        token_usage = llm_service.token_usage_callback.get_usage()
-        print("\n" + "-"*20 + " Token Usage " + "-"*20)
-        print(f"  • Prompt Tokens: {token_usage.get('total_prompt_tokens', 0)}")
-        print(f"  • Completion Tokens: {token_usage.get('total_completion_tokens', 0)}")
-        print(f"  • Total Tokens: {token_usage.get('total_tokens', 0)}")
-        print("-"*55)
-        llm_service.token_usage_callback.reset()  # 重置以便下次统计
+
 
     def _show_help(self):
         """显示帮助信息"""
@@ -447,16 +461,6 @@ class HealthAssistantV2:
         except Exception as e:
             print(f"  ❌ 数据库统计失败: {str(e)}")
         
-        # Token使用统计
-        try:
-            llm_service = self.container.get(LLMService)
-            token_usage = llm_service.token_usage_callback.get_usage()
-            print("  🔤 当前会话Token使用：")
-            print(f"    - 输入Token: {token_usage.get('total_prompt_tokens', 0)}")
-            print(f"    - 输出Token: {token_usage.get('total_completion_tokens', 0)}")
-            print(f"    - 总Token: {token_usage.get('total_tokens', 0)}")
-        except Exception as e:
-            print(f"  ❌ Token统计失败: {str(e)}")
     
     def _reset_conversation(self):
         """重置对话状态"""
@@ -465,12 +469,6 @@ class HealthAssistantV2:
         # 重置状态
         self.state = self._init_state()
         
-        # 重置Token统计
-        try:
-            llm_service = self.container.get(LLMService)
-            llm_service.token_usage_callback.reset()
-        except Exception:
-            pass
         
         print("✅ 对话已重置，可以开始新的会话")
 
@@ -530,3 +528,15 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# 内联意图到 Agent 的映射，替代已删除的 utils.common_parsers.intent_to_agent_mapping
+def intent_to_agent_mapping(intent: IntentType) -> str:
+    mapping = {
+        IntentType.RECORD_MEAL: "dietary",
+        IntentType.RECORD_EXERCISE: "exercise",
+        IntentType.GENERATE_REPORT: "report",
+        IntentType.QUERY: "query",
+        IntentType.ADVICE: "advice",
+    }
+    return mapping.get(intent, "advice")

@@ -297,9 +297,16 @@ class AgentFactory:
                 agent = AdviceAgentV2(
                     llm_service=self.container.get(LLMService)
                 )
+        elif agent_name == "multi_requirement_advice":
+            from agents.multi_requirement_advice_agent import MultiRequirementAdviceAgent
+            agent = MultiRequirementAdviceAgent(
+                llm_service=self.container.get(LLMService),
+                db_service=self.container.get(DatabaseService)
+            )
         else:
-            from agents.general_agent_v2 import GeneralAgentV2
-            agent = GeneralAgentV2(
+            # 默认回退到建议 Agent，替代已移除的 general agent
+            from agents.advice_agent_v2 import AdviceAgentV2
+            agent = AdviceAgentV2(
                 llm_service=self.container.get(LLMService)
             )
         
@@ -308,7 +315,7 @@ class AgentFactory:
     
     def get_available_agents(self) -> List[str]:
         """获取可用的 Agent 列表"""
-        return ["dietary", "exercise", "query", "report", "advice", "general"]
+        return ["dietary", "exercise", "query", "report", "advice", "multi_requirement_advice"]
     
     def clear_cache(self):
         """清理 Agent 缓存"""

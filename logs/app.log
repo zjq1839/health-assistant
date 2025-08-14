@@ -35627,3 +35627,231 @@ Visit our documentation for more embedding options: https://docs.llamaindex.ai/e
 2025-08-13 22:23:23 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
 2025-08-13 22:23:57 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
 2025-08-13 22:24:40 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-13 22:38:55 | ERROR    | __main__:main:526 - Application startup failed: [Errno 5] Input/output error
+2025-08-14 10:10:39 | INFO     | __main__:__init__:52 - HealthAssistantV2 initialized successfully
+2025-08-14 10:11:19 | INFO     | __main__:_process_user_input:132 - Intent planning completed
+2025-08-14 10:11:19 | INFO     | __main__:_process_user_input:158 - Creating agent: dietary
+2025-08-14 10:11:19 | INFO     | __main__:_process_user_input:160 - Agent created successfully: dietary
+2025-08-14 10:11:19 | INFO     | __main__:_process_user_input:173 - About to run agent: dietary
+2025-08-14 10:11:30 | INFO     | core.agent_protocol:_log_execution:217 - Agent dietary executed
+2025-08-14 10:11:30 | INFO     | __main__:_process_user_input:183 - Agent response: status=AgentResult.SUCCESS, message=✅ 已记录您的加餐：{'role': 'user', 'content': '记录我今天早餐吃了鸡蛋
+2025-08-14 11:07:57 | INFO     | main_v2:__init__:58 - HealthAssistantV2 initialized successfully
+2025-08-14 11:24:11 | INFO     | main_v2:__init__:58 - HealthAssistantV2 initialized successfully
+2025-08-14 11:24:11 | INFO     | main_v2:__init__:58 - HealthAssistantV2 initialized successfully
+2025-08-14 11:25:46 | INFO     | __main__:__init__:58 - HealthAssistantV2 initialized successfully
+2025-08-14 11:26:15 | INFO     | __main__:_process_user_input:138 - Intent planning completed
+2025-08-14 11:26:15 | INFO     | __main__:_process_user_input:164 - Creating agent: query
+2025-08-14 11:26:15 | INFO     | __main__:_process_user_input:166 - Agent created successfully: query
+2025-08-14 11:26:15 | INFO     | __main__:_process_user_input:179 - About to run agent: query
+2025-08-14 11:26:15 | INFO     | __main__:_process_user_input:189 - Agent response: status=AgentResult.SUCCESS, message=📊 昨天的记录：
+🍽️ 饮食记录：暂无记录
+2025-08-14 11:47:56 | INFO     | main_v2:__init__:61 - HealthAssistantV2 initialized successfully
+2025-08-14 11:51:59 | INFO     | __main__:__init__:61 - HealthAssistantV2 initialized successfully
+2025-08-14 11:52:07 | INFO     | __main__:_process_user_input:141 - Intent planning completed
+2025-08-14 11:52:07 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 昨天吃了什么，分析一下，我想减脂...
+2025-08-14 11:52:24 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 3 个需求，总置信度: 0.85
+2025-08-14 11:52:24 | INFO     | __main__:_process_user_input:167 - Creating agent: multi_requirement_advice
+2025-08-14 11:52:24 | INFO     | __main__:_process_user_input:169 - Agent created successfully: multi_requirement_advice
+2025-08-14 11:52:24 | INFO     | __main__:_process_user_input:182 - About to run agent: multi_requirement_advice
+2025-08-14 11:52:24 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 昨天吃了什么，分析一下，我想减脂...
+2025-08-14 11:52:24 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 3 个需求，总置信度: 0.85
+2025-08-14 11:52:24 | ERROR    | agents.multi_requirement_advice_agent:_handle_multi_requirement_query:134 - 多需求处理失败: object MultiRequirementRAGService can't be used in 'await' expression
+2025-08-14 11:52:54 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 11:52:54 | INFO     | __main__:_process_user_input:192 - Agent response: status=AgentResult.SUCCESS, message=根据您提供的信息和参考资料，以下是针对减脂的实用建议（信息来源已标注）：
+
+### 1. **控制每
+2025-08-14 11:54:52 | INFO     | __main__:_process_user_input:141 - Intent planning completed
+2025-08-14 11:54:52 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 昨天吃了什么...
+2025-08-14 11:55:02 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 1 个需求，总置信度: 0.80
+2025-08-14 11:55:02 | INFO     | __main__:_process_user_input:167 - Creating agent: query
+2025-08-14 11:55:02 | INFO     | __main__:_process_user_input:169 - Agent created successfully: query
+2025-08-14 11:55:02 | INFO     | __main__:_process_user_input:182 - About to run agent: query
+2025-08-14 11:55:02 | INFO     | __main__:_process_user_input:192 - Agent response: status=AgentResult.SUCCESS, message=📊 昨天的记录：
+🍽️ 饮食记录：暂无记录
+2025-08-14 11:55:29 | INFO     | __main__:_process_user_input:141 - Intent planning completed
+2025-08-14 11:55:29 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 月11号吃了什么...
+2025-08-14 11:55:37 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 1 个需求，总置信度: 0.80
+2025-08-14 11:55:37 | INFO     | __main__:_process_user_input:167 - Creating agent: query
+2025-08-14 11:55:37 | INFO     | __main__:_process_user_input:169 - Agent created successfully: query
+2025-08-14 11:55:37 | INFO     | __main__:_process_user_input:182 - About to run agent: query
+2025-08-14 11:55:37 | INFO     | __main__:_process_user_input:192 - Agent response: status=AgentResult.SUCCESS, message=📊 今天的记录：
+🍽️ 饮食记录：暂无记录
+2025-08-14 11:55:50 | INFO     | __main__:_process_user_input:141 - Intent planning completed
+2025-08-14 11:55:50 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 8月11号吃了什么...
+2025-08-14 11:55:57 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 1 个需求，总置信度: 0.90
+2025-08-14 11:55:57 | INFO     | __main__:_process_user_input:167 - Creating agent: query
+2025-08-14 11:55:57 | INFO     | __main__:_process_user_input:169 - Agent created successfully: query
+2025-08-14 11:55:57 | INFO     | __main__:_process_user_input:182 - About to run agent: query
+2025-08-14 11:55:57 | INFO     | __main__:_process_user_input:192 - Agent response: status=AgentResult.SUCCESS, message=📊 今天的记录：
+🍽️ 饮食记录：暂无记录
+2025-08-14 12:13:46 | INFO     | __main__:__init__:61 - HealthAssistantV2 initialized successfully
+2025-08-14 12:14:01 | INFO     | __main__:_process_user_input:141 - Intent planning completed
+2025-08-14 12:14:01 | WARNING  | __main__:_process_user_input:160 - Invalid entities in plan_result: {}
+2025-08-14 12:14:01 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 撒旦...
+2025-08-14 12:14:19 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 1 个需求，总置信度: 0.80
+2025-08-14 12:14:19 | INFO     | __main__:_process_user_input:167 - Creating agent: general
+2025-08-14 12:14:19 | INFO     | __main__:_process_user_input:169 - Agent created successfully: general
+2025-08-14 12:14:19 | INFO     | __main__:_process_user_input:182 - About to run agent: general
+2025-08-14 12:14:32 | INFO     | __main__:_process_user_input:192 - Agent response: status=AgentResult.SUCCESS, message=你好呀！我是你的健康助手，专注于帮助大家更好地管理饮食和运动。如果你有任何关于营养搭配、运动计划或者
+2025-08-14 12:14:32 | ERROR    | __main__:run:126 - Main loop error: 'OllamaLLMService' object has no attribute 'token_usage_callback'
+2025-08-14 12:16:39 | INFO     | __main__:__init__:61 - HealthAssistantV2 initialized successfully
+2025-08-14 12:16:51 | INFO     | __main__:_process_user_input:141 - Intent planning completed
+2025-08-14 12:16:51 | WARNING  | __main__:_process_user_input:160 - Invalid entities in plan_result: {}
+2025-08-14 12:16:51 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 萨顶顶...
+2025-08-14 12:17:03 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 1 个需求，总置信度: 0.80
+2025-08-14 12:17:03 | INFO     | __main__:_process_user_input:167 - Creating agent: general
+2025-08-14 12:17:03 | INFO     | __main__:_process_user_input:169 - Agent created successfully: general
+2025-08-14 12:17:03 | INFO     | __main__:_process_user_input:182 - About to run agent: general
+2025-08-14 12:17:12 | INFO     | __main__:_process_user_input:192 - Agent response: status=AgentResult.SUCCESS, message=您好！看起来您可能输入了名字，或者有其他问题需要帮助。我是您的健康助手，专注于饮食和运动管理。如果您
+2025-08-14 14:58:20 | WARNING  | core.multi_requirement_parser:create_multi_requirement_parser:435 - 创建解析器时无法获取LLM服务: No module named 'core.intent_recognizer'
+2025-08-14 14:58:20 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 查询我昨天的饮食记录，并给我一些今天的健康建议...
+2025-08-14 14:58:20 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.60
+2025-08-14 14:58:20 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 记录我今天早餐吃了鸡蛋和牛奶，然后分析我这周的营养摄入情况...
+2025-08-14 14:58:20 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.60
+2025-08-14 14:58:20 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 生成我的健康报告，同时推荐适合我的运动计划...
+2025-08-14 14:58:20 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.60
+2025-08-14 14:58:20 | ERROR    | test_multi_requirement_rag:test_multi_requirement_rag:153 - 多需求RAG服务失败: No module named 'core.intent_recognizer'
+2025-08-14 14:58:20 | ERROR    | test_multi_requirement_rag:test_integration:205 - 集成测试失败: No module named 'core.intent_recognizer'
+2025-08-14 14:58:22 | ERROR    | test_rag_verbose:test_rag_agent_integration:138 - RAG agent test failed
+2025-08-14 16:54:22 | WARNING  | core.multi_requirement_parser:create_multi_requirement_parser:435 - 创建解析器时无法获取LLM服务: No module named 'core.intent_recognizer'
+2025-08-14 16:54:22 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 查询我昨天的饮食记录，并给我一些今天的健康建议...
+2025-08-14 16:54:22 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.60
+2025-08-14 16:54:22 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 记录我今天早餐吃了鸡蛋和牛奶，然后分析我这周的营养摄入情况...
+2025-08-14 16:54:22 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.60
+2025-08-14 16:54:22 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 生成我的健康报告，同时推荐适合我的运动计划...
+2025-08-14 16:54:22 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.60
+2025-08-14 16:54:22 | ERROR    | test_multi_requirement_rag:test_multi_requirement_rag:153 - 多需求RAG服务失败: No module named 'core.intent_recognizer'
+2025-08-14 16:54:22 | ERROR    | test_multi_requirement_rag:test_integration:205 - 集成测试失败: No module named 'core.intent_recognizer'
+2025-08-14 16:54:24 | ERROR    | test_rag_verbose:test_rag_agent_integration:138 - RAG agent test failed
+2025-08-14 17:23:27 | WARNING  | core.multi_requirement_parser:create_multi_requirement_parser:435 - 创建解析器时无法获取LLM服务: No module named 'utils.common_parsers'
+2025-08-14 17:23:27 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 查询我昨天的饮食记录，并给我一些今天的健康建议...
+2025-08-14 17:23:27 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.60
+2025-08-14 17:23:27 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 记录我今天早餐吃了鸡蛋和牛奶，然后分析我这周的营养摄入情况...
+2025-08-14 17:23:27 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.60
+2025-08-14 17:23:27 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 生成我的健康报告，同时推荐适合我的运动计划...
+2025-08-14 17:23:27 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.60
+2025-08-14 17:23:27 | ERROR    | test_multi_requirement_rag:test_multi_requirement_rag:153 - 多需求RAG服务失败: No module named 'utils.common_parsers'
+2025-08-14 17:23:27 | ERROR    | test_multi_requirement_rag:test_integration:205 - 集成测试失败: No module named 'utils.common_parsers'
+2025-08-14 17:23:29 | ERROR    | test_rag_verbose:test_rag_agent_integration:138 - RAG agent test failed
+2025-08-14 17:43:50 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 查询我昨天的饮食记录，并给我一些今天的健康建议...
+2025-08-14 17:44:09 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.80
+2025-08-14 17:44:09 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 记录我今天早餐吃了鸡蛋和牛奶，然后分析我这周的营养摄入情况...
+2025-08-14 17:44:19 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.88
+2025-08-14 17:44:19 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 生成我的健康报告，同时推荐适合我的运动计划...
+2025-08-14 17:44:34 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 4 个需求，总置信度: 0.80
+2025-08-14 17:44:34 | INFO     | core.rag_service:load_knowledge_base:279 - Loaded 1 documents, 0 chunks
+2025-08-14 17:44:34 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 我有高血压，请推荐降压食物和运动方式，并说明注意事项...
+2025-08-14 17:45:10 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 3 个需求，总置信度: 0.85
+2025-08-14 17:45:44 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 查询我昨天的饮食记录，并给我一些今天的健康建议...
+2025-08-14 17:45:59 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.78
+2025-08-14 17:45:59 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 记录我今天早餐吃了鸡蛋和牛奶，然后分析我这周的营养摄入情况...
+2025-08-14 17:46:09 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.88
+2025-08-14 17:46:09 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 生成我的健康报告，同时推荐适合我的运动计划...
+2025-08-14 17:46:25 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 4 个需求，总置信度: 0.80
+2025-08-14 17:46:25 | INFO     | core.rag_service:load_knowledge_base:279 - Loaded 1 documents, 0 chunks
+2025-08-14 17:46:25 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 我有高血压，请推荐降压食物和运动方式，并说明注意事项...
+2025-08-14 17:47:02 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 3 个需求，总置信度: 0.85
+2025-08-14 17:47:37 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 17:48:01 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 17:48:42 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 17:49:17 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 我想减肥，需要低卡路里食谱，适合的运动计划，以及如何计算每日消耗...
+2025-08-14 17:49:39 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 3 个需求，总置信度: 0.85
+2025-08-14 17:50:26 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 17:50:44 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 查询我昨天的饮食记录，并给我一些今天的健康建议...
+2025-08-14 17:50:59 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.78
+2025-08-14 17:50:59 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 记录我今天早餐吃了鸡蛋和牛奶，然后分析我这周的营养摄入情况...
+2025-08-14 17:51:10 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.88
+2025-08-14 17:51:10 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 生成我的健康报告，同时推荐适合我的运动计划...
+2025-08-14 17:51:25 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 4 个需求，总置信度: 0.80
+2025-08-14 17:51:25 | INFO     | core.rag_service:load_knowledge_base:279 - Loaded 1 documents, 0 chunks
+2025-08-14 17:51:25 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 我有高血压，请推荐降压食物和运动方式，并说明注意事项...
+2025-08-14 17:52:02 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 3 个需求，总置信度: 0.85
+2025-08-14 17:52:36 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 17:53:00 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 17:53:41 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 17:54:17 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 我想减肥，需要低卡路里食谱，适合的运动计划，以及如何计算每日消耗...
+2025-08-14 17:54:39 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 3 个需求，总置信度: 0.85
+2025-08-14 17:55:26 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 17:56:12 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 17:56:58 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 17:57:41 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 我是糖尿病患者，需要血糖控制饮食建议，适合的运动类型，以及药物管理指导...
+2025-08-14 17:57:56 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 3 个需求，总置信度: 0.85
+2025-08-14 17:58:35 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 17:59:01 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 17:59:39 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 18:00:22 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 我怀孕6个月，请推荐孕期营养食谱，适合的运动，以及需要补充的维生素...
+2025-08-14 18:00:36 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 3 个需求，总置信度: 0.85
+2025-08-14 18:01:16 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 18:01:57 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 18:02:25 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 18:03:40 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 18:04:07 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 18:04:38 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 18:05:10 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 18:05:47 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 18:06:18 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 18:06:47 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 18:07:22 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 18:07:52 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 18:45:22 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 查询我昨天的饮食记录，并给我一些今天的健康建议...
+2025-08-14 18:46:00 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 查询我昨天的饮食记录，并给我一些今天的健康建议...
+2025-08-14 18:46:12 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.78
+2025-08-14 18:46:12 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 记录我今天早餐吃了鸡蛋和牛奶，然后分析我这周的营养摄入情况...
+2025-08-14 18:46:23 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.88
+2025-08-14 18:46:23 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 生成我的健康报告，同时推荐适合我的运动计划...
+2025-08-14 18:46:37 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 4 个需求，总置信度: 0.80
+2025-08-14 18:46:38 | INFO     | core.rag_service:load_knowledge_base:279 - Loaded 1 documents, 0 chunks
+2025-08-14 18:46:38 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 我有高血压，请推荐降压食物和运动方式，并说明注意事项...
+2025-08-14 18:47:03 | INFO     | __main__:__init__:61 - HealthAssistantV2 initialized successfully
+2025-08-14 18:47:14 | ERROR    | core.lightweight_planner:_llm_intent_with_state:511 - LLM intent with state failed: 'str' object has no attribute 'content'
+2025-08-14 18:47:24 | ERROR    | core.lightweight_planner:_llm_intent_with_state:511 - LLM intent with state failed: 'str' object has no attribute 'content'
+2025-08-14 18:47:24 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 18:47:24 | WARNING  | __main__:_process_user_input:158 - Invalid entities in plan_result: None
+2025-08-14 18:47:24 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 与分局管理局哦呵呵很快就胡歌...
+2025-08-14 18:47:39 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.70
+2025-08-14 18:47:39 | INFO     | __main__:_process_user_input:165 - Creating agent: advice
+2025-08-14 18:47:39 | INFO     | core.rag_service:load_knowledge_base:279 - Loaded 1 documents, 0 chunks
+2025-08-14 18:47:39 | INFO     | agents.rag_enhanced_advice_agent:load_knowledge_from_directory:287 - Loaded knowledge base from: /home/zjq/document/langchain_learn/rag_knowledge_base
+2025-08-14 18:47:39 | INFO     | __main__:_process_user_input:167 - Agent created successfully: rag_advice
+2025-08-14 18:47:39 | WARNING  | __main__:_process_user_input:174 - Agent advice cannot handle intent IntentType.UNKNOWN
+2025-08-14 18:47:39 | INFO     | __main__:_process_user_input:180 - About to run agent: rag_advice
+2025-08-14 18:48:00 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 18:48:00 | INFO     | __main__:_process_user_input:190 - Agent response: status=AgentResult.SUCCESS, message=根据您提供的信息，当前查询内容存在表述不清或输入错误（如“分局管理局哦呵呵很快就胡歌”无法明确具体需
+2025-08-14 18:49:20 | ERROR    | core.lightweight_planner:_llm_intent_with_state:511 - LLM intent with state failed: 'str' object has no attribute 'content'
+2025-08-14 18:49:20 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 18:49:20 | WARNING  | __main__:_process_user_input:158 - Invalid entities in plan_result: None
+2025-08-14 18:49:20 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 可以的...
+2025-08-14 18:49:36 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 1 个需求，总置信度: 0.50
+2025-08-14 18:49:36 | INFO     | __main__:_process_user_input:165 - Creating agent: advice
+2025-08-14 18:49:36 | INFO     | __main__:_process_user_input:167 - Agent created successfully: rag_advice
+2025-08-14 18:49:36 | WARNING  | __main__:_process_user_input:174 - Agent advice cannot handle intent IntentType.UNKNOWN
+2025-08-14 18:49:36 | INFO     | __main__:_process_user_input:180 - About to run agent: rag_advice
+2025-08-14 18:49:59 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 18:49:59 | INFO     | __main__:_process_user_input:190 - Agent response: status=AgentResult.SUCCESS, message=根据您提供的信息，当前查询内容存在表述不清或输入错误（如“分局管理局哦呵呵很快就胡歌”无法明确具体需
+2025-08-14 18:50:32 | ERROR    | core.lightweight_planner:_llm_intent_with_state:511 - LLM intent with state failed: 'str' object has no attribute 'content'
+2025-08-14 18:50:32 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 18:50:32 | WARNING  | __main__:_process_user_input:158 - Invalid entities in plan_result: None
+2025-08-14 18:50:32 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 你好你好...
+2025-08-14 18:50:41 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 1 个需求，总置信度: 0.20
+2025-08-14 18:50:41 | INFO     | __main__:_process_user_input:165 - Creating agent: advice
+2025-08-14 18:50:41 | INFO     | __main__:_process_user_input:167 - Agent created successfully: rag_advice
+2025-08-14 18:50:41 | WARNING  | __main__:_process_user_input:174 - Agent advice cannot handle intent IntentType.UNKNOWN
+2025-08-14 18:50:41 | INFO     | __main__:_process_user_input:180 - About to run agent: rag_advice
+2025-08-14 18:51:07 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 18:51:07 | INFO     | __main__:_process_user_input:190 - Agent response: status=AgentResult.SUCCESS, message=根据您提供的信息，结合参考资料内容，我为您整理以下健康建议：
+
+### 一、关于饮酒的注意事项（引用
+2025-08-14 20:07:07 | ERROR    | __main__:main:524 - Application startup failed: Can't instantiate abstract class OllamaLLMService with abstract method classify_intent
+2025-08-14 20:21:30 | INFO     | __main__:__init__:61 - HealthAssistantV2 initialized successfully
+2025-08-14 20:21:48 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 20:21:48 | WARNING  | __main__:_process_user_input:158 - Invalid entities in plan_result: {}
+2025-08-14 20:21:48 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: u聚光镜后果就...
+2025-08-14 20:22:02 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 1 个需求，总置信度: 0.60
+2025-08-14 20:22:02 | INFO     | __main__:_process_user_input:165 - Creating agent: advice
+2025-08-14 20:22:02 | INFO     | core.rag_service:load_knowledge_base:279 - Loaded 1 documents, 0 chunks
+2025-08-14 20:22:02 | INFO     | agents.rag_enhanced_advice_agent:load_knowledge_from_directory:287 - Loaded knowledge base from: /home/zjq/document/langchain_learn/rag_knowledge_base
+2025-08-14 20:22:02 | INFO     | __main__:_process_user_input:167 - Agent created successfully: rag_advice
+2025-08-14 20:22:02 | WARNING  | __main__:_process_user_input:174 - Agent advice cannot handle intent IntentType.UNKNOWN
+2025-08-14 20:22:02 | INFO     | __main__:_process_user_input:180 - About to run agent: rag_advice
+2025-08-14 20:22:19 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 20:22:19 | INFO     | __main__:_process_user_input:190 - Agent response: status=AgentResult.SUCCESS, message=根据您提供的信息，当前问题描述存在不明确或输入错误（如“u聚光镜后果就”无法直接关联到健康饮食或营养

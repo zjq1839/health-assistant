@@ -315,7 +315,7 @@ class MultiRequirementParser:
     
     def _build_lite_parsing_prompt(self, query: str, context: str) -> str:
         """构建轻量级模型解析提示词"""
-        return f"""分析以下查询，识别其中包含的多个需求并分解。
+        return f"""分析以下查询，注意其中可能包含单个或多个需求，识别其中包含的需求并分解。
 
 查询: {query}
 上下文: {context}

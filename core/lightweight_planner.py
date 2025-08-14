@@ -9,10 +9,11 @@ import time
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
+from collections import OrderedDict
 
 from .enhanced_state import IntentType, EnhancedState
-from core.intent_recognizer import IntentCache
-from agents.config import get_llm
+# from core.intent_recognizer import IntentCache  # removed: module not present
+# from agents.config import get_llm  # removed: not used here
 from utils.logger import logger
 from utils.common_parsers import intent_to_agent_mapping
 from config import config
@@ -32,6 +33,37 @@ class PlanResult:
     def needs_llm(self) -> bool:
         """是否需要大模型处理"""
         return self.confidence < 0.6
+
+
+class IntentCache:
+    """简单LRU意图缓存，按 (user_input, context) 作为键缓存 (intent, confidence, entities)。"""
+    def __init__(self, max_size: int = 200):
+        self.max_size = max_size
+        self._store: "OrderedDict[Tuple[str, str], Tuple[IntentType, float, Dict]]" = OrderedDict()
+
+    def _make_key(self, user_input: str, context: str) -> Tuple[str, str]:
+        ui = (user_input or "").strip()
+        ctx = (context or "").strip()
+        return (ui, ctx)
+
+    def get(self, user_input: str, context: str):
+        key = self._make_key(user_input, context)
+        if key in self._store:
+            value = self._store.pop(key)
+            # 访问后移动到末尾，表示最近使用
+            self._store[key] = value
+            return value
+        return None
+
+    def put(self, user_input: str, intent: IntentType, confidence: float, entities: Dict, context: str):
+        key = self._make_key(user_input, context)
+        value = (intent, confidence, entities)
+        if key in self._store:
+            self._store.pop(key)
+        elif len(self._store) >= self.max_size:
+            # 弹出最久未使用
+            self._store.popitem(last=False)
+        self._store[key] = value
 
 
 class RuleBasedClassifier:

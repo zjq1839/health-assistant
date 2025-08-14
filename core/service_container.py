@@ -22,50 +22,16 @@ from langchain_core.messages import BaseMessage, AIMessage
 from utils.logger import logger
 from config import config as cfg
 from langchain_openai import ChatOpenAI
-
-
-class TokenUsageCallback(BaseCallbackHandler):
-    """A callback handler to calculate and log token usage."""
-
-    def __init__(self):
-        super().__init__()
-        self.total_prompt_tokens = 0
-        self.total_completion_tokens = 0
-        self.total_tokens = 0
-
-    def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
-        """Collect token usage from the LLM response."""
-        if response.llm_output and "token_usage" in response.llm_output:
-            token_usage = response.llm_output["token_usage"]
-            self.total_prompt_tokens += token_usage.get("prompt_tokens", 0)
-            self.total_completion_tokens += token_usage.get("completion_tokens", 0)
-            self.total_tokens += token_usage.get("total_tokens", 0)
-
-    def get_usage(self) -> Dict[str, int]:
-        """Get the total token usage."""
-        return {
-            "total_prompt_tokens": self.total_prompt_tokens,
-            "total_completion_tokens": self.total_completion_tokens,
-            "total_tokens": self.total_tokens,
-        }
-
-    def reset(self) -> None:
-        """Reset the token counters."""
-        self.total_prompt_tokens = 0
-        self.total_completion_tokens = 0
-        self.total_tokens = 0
-
+from agents.config import get_llm
 
 class OllamaLLMService(LLMService):
     """Ollama LLM服务实现"""
     
     def __init__(self):
         # 延迟导入，避免循环依赖
-        from agents.config import get_llm
         
-        self.token_usage_callback = TokenUsageCallback()
-        self.llm = get_llm('extraction', callbacks=[self.token_usage_callback])
-        self.lite_llm = get_llm('classification', lite=True, callbacks=[self.token_usage_callback])
+        self.llm = get_llm('extraction')
+        self.lite_llm = get_llm('classification', lite=True)
         
         # 导入日志
         from utils.logger import logger
@@ -128,47 +94,67 @@ class OllamaLLMService(LLMService):
             self.logger.error(f"Response generation failed: {str(e)}")
             return "抱歉，我现在无法生成响应，请稍后重试。"
     
-    def invoke(self, prompt: str) -> Any:
-        """直接调用 LLM（兼容 LightweightPlanner）"""
-        return self.llm.invoke(prompt)
-    
     def classify_intent(self, text: str, context: str = "") -> Dict:
-        """意图分类"""
+        """意图分类 - 使用轻量级模型进行快速分类"""
         try:
             prompt = f"""
-核心功能注册表:
-- RECORD_MEAL: 记录餐食
-- RECORD_EXERCISE: 记录运动
-- QUERY: 查询数据
-- GENERATE_REPORT: 生成报告
-- ADVICE: 获取建议
+分析以下文本的意图，返回JSON格式：
 
-其他功能:
-- 数据同步和备份
-- 智能分析和推荐
-- 多模态输入支持
+文本：{text}
+上下文：{context}
+
+请判断用户意图，返回如下格式：
+{{
+    "intent": "advice|query|record_meal|record_exercise|generate_report|general",
+    "confidence": 0.8,
+    "entities": {{}}
+}}
+
+意图说明：
+- advice: 健康建议、推荐
+- query: 查询历史记录
+- record_meal: 记录饮食
+- record_exercise: 记录运动
+- generate_report: 生成报告
+- general: 一般对话
 """
             
             response = self.lite_llm.invoke(prompt)
             content = response.content if hasattr(response, 'content') else str(response)
             
-            # 解析响应
+            # 尝试解析JSON
             import json
             import re
             
-            json_match = re.search(r'\{[^}]*\}', content)
+            json_match = re.search(r'\{[^}]*\}', content, re.DOTALL)
             if json_match:
+                json_str = json_match.group()
                 try:
-                    return json.loads(json_match.group())
+                    result = json.loads(json_str)
+                    return result
                 except json.JSONDecodeError:
                     pass
             
             # 降级处理
-            return {"intent": "UNKNOWN", "confidence": 0.5}
+            return {
+                "intent": "general",
+                "confidence": 0.5,
+                "entities": {}
+            }
             
         except Exception as e:
             self.logger.error(f"Intent classification failed: {str(e)}")
-            return {"intent": "UNKNOWN", "confidence": 0.0}
+            return {
+                "intent": "general", 
+                "confidence": 0.3,
+                "entities": {}
+            }
+    
+    def invoke(self, prompt: str) -> Any:
+        """直接调用 LLM（兼容 LightweightPlanner）"""
+        return self.llm.invoke(prompt)
+    
+    # 意图分类已由LightweightPlanner统一处理，移除冗余方法
 
 
 class ConfigurableServiceContainer(ServiceContainer):
@@ -183,41 +169,41 @@ class ConfigurableServiceContainer(ServiceContainer):
         self._setup_services()
     
     def _load_config(self, config_path: str = None) -> Dict[str, Any]:
-        """加载配置"""
-        if config_path is None:
-            # 使用默认配置
-            return {
-                'database': {
-                    'type': 'sqlite',
-                    'path': 'data/health_assistant.db'
-                },
-                'llm': {
-                    'type': 'ollama',
-                    'model': 'glm-4',
-                    'temperature': 0.1,
-                    'streaming': True
-                },
-                'nutrition': {
-                    'type': 'local',
-                    'food_db_path': 'data/nutrition.db',
-                    'exercise_db_path': 'data/nutrition.db'
-                },
-                'planner': {
-                    'enable_cache': True,
-                    'cache_size': 1000,
-                    'rule_confidence_threshold': 0.8,
-                    'lite_model_threshold': 0.7
-                }
-            }
+        """加载配置 - 简化为直接使用全局配置"""
+        if config_path:
+            # 从文件加载配置
+            import yaml
+            try:
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    return yaml.safe_load(f)
+            except Exception:
+                pass  # 降级到全局配置
         
-        # 从文件加载配置
-        import yaml
-        try:
-            with open(config_path, 'r', encoding='utf-8') as f:
-                return yaml.safe_load(f)
-        except Exception:
-            # 降级到默认配置
-            return self._load_config(None)
+        # 使用全局配置
+        from config import config
+        return {
+            'database': {
+                'type': 'sqlite',
+                'path': config.database.path
+            },
+            'llm': {
+                'type': 'ollama',
+                'model': config.llm.model,
+                'temperature': config.llm.temperature,
+                'streaming': True
+            },
+            'nutrition': {
+                'type': 'local',
+                'food_db_path': 'data/nutrition.db',
+                'exercise_db_path': 'data/nutrition.db'
+            },
+            'planner': {
+                'enable_cache': config.cache.enable,
+                'cache_size': config.cache.size,
+                'rule_confidence_threshold': 0.8,
+                'lite_model_threshold': 0.7
+            }
+        }
     
     def _setup_services(self):
         """根据配置设置服务"""
