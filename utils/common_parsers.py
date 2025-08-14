@@ -18,7 +18,10 @@ def intent_to_agent_mapping(intent: IntentType) -> str:
         IntentType.QUERY: "query",
         IntentType.ADVICE: "advice",
     }
-    return mapping.get(intent, "advice")
+    # 对于UNKNOWN意图，返回None而不是兜底到advice
+    if intent == IntentType.UNKNOWN:
+        return None
+    return mapping.get(intent, None)
 
 
 def parse_duration(text: str) -> int:

@@ -107,11 +107,6 @@ class LLMService(ABC):
     def generate_response(self, prompt: str, context: str = "") -> str:
         """生成响应"""
         pass
-    
-    @abstractmethod
-    def classify_intent(self, text: str, context: str = "") -> Dict:
-        """意图分类"""
-        pass
 
 
 class NutritionService(ABC):

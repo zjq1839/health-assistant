@@ -160,6 +160,76 @@ class HealthAssistantV2:
         # 4. 选择合适的Agent
         agent_name = self._select_agent(plan_result, user_input)
         
+        # 无法理解用户意图时，使用LLM进行共情式兜底回复，并保留上下文传递
+        if agent_name is None:
+            logger.warning("Unable to understand user request; using LLM empathetic fallback")
+            try:
+                llm_service = self.container.get(LLMService)
+            except Exception as e:
+                logger.error(f"LLMService unavailable for fallback: {e}")
+                # 退化为简短的人性化消息
+                fallback_text = "我可能没有完全理解你的意思。但我在这儿支持你。可以再描述一下你现在最关心的问题吗？例如：记录饮食/运动、查询数据、生成报告或获取建议。"
+                response = AgentResponse(
+                    status=AgentResult.SUCCESS,
+                    message=fallback_text,
+                    data={
+                        'fallback': 'unknown_intent_llm',
+                        'intent': IntentType.UNKNOWN.value,
+                        'method': 'none',
+                        'confidence': plan_result.confidence
+                    }
+                )
+                # 更新对话历史后返回
+                self._update_dialog_history(user_input, response)
+                return response
+            
+            # 构建上下文与提示词
+            context = self._get_context()
+            entities = {}
+            try:
+                ds = self.state.get('dialog_state')
+                if ds and getattr(ds, 'entities', None):
+                    entities = ds.entities or {}
+            except Exception:
+                entities = {}
+            
+            # 构建具有情绪价值的澄清式提示词
+            fallback_prompt = (
+                "你是一个温暖、专业且有共情力的健康助手。当无法明确识别用户意图时：\n"
+                "1) 先给出简短的安抚/支持性回应；\n"
+                "2) 提出1-2个明确的澄清问题，帮助继续；\n"
+                "3) 给出可选方向（如记录饮食/记录运动/查询/生成报告/获取建议）；\n"
+                "4) 用中文回答，总字数不超过120字；\n"
+                "5) 不要夸大承诺。\n\n"
+                f"用户最新输入：{user_input}\n"
+                f"已知上下文（最近对话摘要）：\n{context}\n"
+                f"已知实体线索：{entities}\n"
+                "请给出一次性的自然语言回复。"
+            )
+            
+            try:
+                fallback_text = llm_service.generate_response(fallback_prompt, context)
+                if not isinstance(fallback_text, str) or not fallback_text.strip():
+                    raise ValueError("Empty fallback from LLM")
+            except Exception as e:
+                logger.error(f"LLM fallback generation failed: {e}")
+                fallback_text = "我理解你可能在探索一些想法。为了更好地帮助你，能否告诉我你更倾向于：记录饮食/运动、查询历史、生成报告，还是需要健康建议？"
+            
+            response = AgentResponse(
+                status=AgentResult.SUCCESS,
+                message=fallback_text.strip(),
+                data={
+                    'fallback': 'unknown_intent_llm',
+                    'intent': IntentType.UNKNOWN.value,
+                    'method': 'llm',
+                    'confidence': plan_result.confidence
+                }
+            )
+            
+            # 更新对话历史后返回
+            self._update_dialog_history(user_input, response)
+            return response
+        
         # 5. 创建Agent并执行
         try:
             logger.info(f"Creating agent: {agent_name}")
@@ -235,9 +305,9 @@ class HealthAssistantV2:
         )
     
     def _select_agent(self, plan_result: PlanResult, user_input: str) -> str:
-        """根据规划结果选择Agent"""
-        if not plan_result.intent:
-            return "advice"
+        """根据规划结果选择Agent；当无法理解用户意图时返回None，由上层返回错误"""
+        if not plan_result.intent or plan_result.intent == IntentType.UNKNOWN:
+            return None
         
         # 优先检测是否为多需求查询：当识别出多个需求时，统一路由到 multi_requirement_advice
         # 该 Agent 支持 ADVICE/QUERY/GENERATE_REPORT 三类复合咨询场景
@@ -539,4 +609,7 @@ def intent_to_agent_mapping(intent: IntentType) -> str:
         IntentType.QUERY: "query",
         IntentType.ADVICE: "advice",
     }
-    return mapping.get(intent, "advice")
+    # 对于UNKNOWN意图，返回None
+    if intent == IntentType.UNKNOWN:
+        return None
+    return mapping.get(intent, None)

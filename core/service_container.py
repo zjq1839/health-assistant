@@ -31,7 +31,6 @@ class OllamaLLMService(LLMService):
         # 延迟导入，避免循环依赖
         
         self.llm = get_llm('extraction')
-        self.lite_llm = get_llm('classification', lite=True)
         
         # 导入日志
         from utils.logger import logger
@@ -94,67 +93,9 @@ class OllamaLLMService(LLMService):
             self.logger.error(f"Response generation failed: {str(e)}")
             return "抱歉，我现在无法生成响应，请稍后重试。"
     
-    def classify_intent(self, text: str, context: str = "") -> Dict:
-        """意图分类 - 使用轻量级模型进行快速分类"""
-        try:
-            prompt = f"""
-分析以下文本的意图，返回JSON格式：
-
-文本：{text}
-上下文：{context}
-
-请判断用户意图，返回如下格式：
-{{
-    "intent": "advice|query|record_meal|record_exercise|generate_report|general",
-    "confidence": 0.8,
-    "entities": {{}}
-}}
-
-意图说明：
-- advice: 健康建议、推荐
-- query: 查询历史记录
-- record_meal: 记录饮食
-- record_exercise: 记录运动
-- generate_report: 生成报告
-- general: 一般对话
-"""
-            
-            response = self.lite_llm.invoke(prompt)
-            content = response.content if hasattr(response, 'content') else str(response)
-            
-            # 尝试解析JSON
-            import json
-            import re
-            
-            json_match = re.search(r'\{[^}]*\}', content, re.DOTALL)
-            if json_match:
-                json_str = json_match.group()
-                try:
-                    result = json.loads(json_str)
-                    return result
-                except json.JSONDecodeError:
-                    pass
-            
-            # 降级处理
-            return {
-                "intent": "general",
-                "confidence": 0.5,
-                "entities": {}
-            }
-            
-        except Exception as e:
-            self.logger.error(f"Intent classification failed: {str(e)}")
-            return {
-                "intent": "general", 
-                "confidence": 0.3,
-                "entities": {}
-            }
-    
     def invoke(self, prompt: str) -> Any:
         """直接调用 LLM（兼容 LightweightPlanner）"""
         return self.llm.invoke(prompt)
-    
-    # 意图分类已由LightweightPlanner统一处理，移除冗余方法
 
 
 class ConfigurableServiceContainer(ServiceContainer):

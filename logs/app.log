@@ -35855,3 +35855,89 @@ Visit our documentation for more embedding options: https://docs.llamaindex.ai/e
 2025-08-14 20:22:02 | INFO     | __main__:_process_user_input:180 - About to run agent: rag_advice
 2025-08-14 20:22:19 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
 2025-08-14 20:22:19 | INFO     | __main__:_process_user_input:190 - Agent response: status=AgentResult.SUCCESS, message=根据您提供的信息，当前问题描述存在不明确或输入错误（如“u聚光镜后果就”无法直接关联到健康饮食或营养
+2025-08-14 20:35:01 | INFO     | __main__:__init__:61 - HealthAssistantV2 initialized successfully
+2025-08-14 20:35:20 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 20:35:20 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 共和国和所得税的...
+2025-08-14 20:35:36 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.68
+2025-08-14 20:35:36 | INFO     | __main__:_process_user_input:165 - Creating agent: advice
+2025-08-14 20:35:36 | INFO     | core.rag_service:load_knowledge_base:279 - Loaded 1 documents, 0 chunks
+2025-08-14 20:35:36 | INFO     | agents.rag_enhanced_advice_agent:load_knowledge_from_directory:287 - Loaded knowledge base from: /home/zjq/document/langchain_learn/rag_knowledge_base
+2025-08-14 20:35:36 | INFO     | __main__:_process_user_input:167 - Agent created successfully: rag_advice
+2025-08-14 20:35:36 | WARNING  | __main__:_process_user_input:174 - Agent advice cannot handle intent IntentType.UNKNOWN
+2025-08-14 20:35:36 | INFO     | __main__:_process_user_input:180 - About to run agent: rag_advice
+2025-08-14 20:35:50 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 20:35:50 | INFO     | __main__:_process_user_input:190 - Agent response: status=AgentResult.SUCCESS, message=根据您提供的信息，当前参考资料内容主要涉及营养学、健康饮食建议（如多层次干预、食物多样性、钠摄入量、
+2025-08-14 20:42:45 | INFO     | __main__:__init__:61 - HealthAssistantV2 initialized successfully
+2025-08-14 20:43:01 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 20:43:01 | WARNING  | __main__:_process_user_input:158 - Invalid entities in plan_result: {}
+2025-08-14 20:43:01 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 二代身份的数据库...
+2025-08-14 20:43:01 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 1 个需求，总置信度: 0.60
+2025-08-14 20:43:01 | INFO     | __main__:_process_user_input:165 - Creating agent: advice
+2025-08-14 20:43:01 | INFO     | core.rag_service:load_knowledge_base:279 - Loaded 1 documents, 0 chunks
+2025-08-14 20:43:01 | INFO     | agents.rag_enhanced_advice_agent:load_knowledge_from_directory:287 - Loaded knowledge base from: /home/zjq/document/langchain_learn/rag_knowledge_base
+2025-08-14 20:43:01 | INFO     | __main__:_process_user_input:167 - Agent created successfully: rag_advice
+2025-08-14 20:43:01 | WARNING  | __main__:_process_user_input:174 - Agent advice cannot handle intent IntentType.UNKNOWN
+2025-08-14 20:43:01 | INFO     | __main__:_process_user_input:180 - About to run agent: rag_advice
+2025-08-14 20:43:22 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 20:43:22 | INFO     | __main__:_process_user_input:190 - Agent response: status=AgentResult.SUCCESS, message=根据您提供的信息，当前参考资料中并未涉及“二代身份的数据库”相关内容，因此无法基于现有资料提供针对性
+2025-08-14 21:30:47 | INFO     | __main__:__init__:61 - HealthAssistantV2 initialized successfully
+2025-08-14 21:30:47 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 21:30:47 | WARNING  | __main__:_process_user_input:165 - Unable to understand user request; returning error response
+2025-08-14 21:40:26 | INFO     | __main__:__init__:61 - HealthAssistantV2 initialized successfully
+2025-08-14 21:40:26 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 21:40:26 | WARNING  | __main__:_process_user_input:165 - Unable to understand user request; using LLM empathetic fallback
+2025-08-14 21:40:53 | INFO     | __main__:__init__:61 - HealthAssistantV2 initialized successfully
+2025-08-14 21:41:01 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 21:41:01 | WARNING  | __main__:_process_user_input:158 - Invalid entities in plan_result: {}
+2025-08-14 21:41:01 | WARNING  | __main__:_process_user_input:165 - Unable to understand user request; using LLM empathetic fallback
+2025-08-14 21:41:24 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 21:41:24 | WARNING  | __main__:_process_user_input:158 - Invalid entities in plan_result: {}
+2025-08-14 21:41:24 | WARNING  | __main__:_process_user_input:165 - Unable to understand user request; using LLM empathetic fallback
+2025-08-14 21:41:46 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 21:41:46 | WARNING  | __main__:_process_user_input:158 - Invalid entities in plan_result: {}
+2025-08-14 21:41:46 | WARNING  | __main__:_process_user_input:165 - Unable to understand user request; using LLM empathetic fallback
+2025-08-14 21:42:12 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 21:42:12 | WARNING  | __main__:_process_user_input:158 - Invalid entities in plan_result: {}
+2025-08-14 21:42:12 | WARNING  | __main__:_process_user_input:165 - Unable to understand user request; using LLM empathetic fallback
+2025-08-14 21:43:20 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 21:43:20 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 我是个心脏病患者，我需要一些饮食建议，...
+2025-08-14 21:43:20 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.60
+2025-08-14 21:43:20 | INFO     | __main__:_process_user_input:235 - Creating agent: multi_requirement_advice
+2025-08-14 21:43:20 | INFO     | __main__:_process_user_input:237 - Agent created successfully: multi_requirement_advice
+2025-08-14 21:43:20 | INFO     | __main__:_process_user_input:250 - About to run agent: multi_requirement_advice
+2025-08-14 21:43:20 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 我是个心脏病患者，我需要一些饮食建议，...
+2025-08-14 21:43:20 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.60
+2025-08-14 21:43:20 | ERROR    | agents.multi_requirement_advice_agent:_handle_multi_requirement_query:134 - 多需求处理失败: object MultiRequirementRAGService can't be used in 'await' expression
+2025-08-14 21:43:58 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 21:43:58 | INFO     | __main__:_process_user_input:260 - Agent response: status=AgentResult.SUCCESS, message=根据您提供的信息和参考资料，以下是针对心脏病患者的饮食建议（信息来源已标注）：
+
+---
+
+### 
+2025-08-14 21:44:54 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 21:44:54 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 我还有糖尿病...
+2025-08-14 21:44:54 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.60
+2025-08-14 21:44:54 | INFO     | __main__:_process_user_input:235 - Creating agent: multi_requirement_advice
+2025-08-14 21:44:54 | INFO     | __main__:_process_user_input:237 - Agent created successfully: multi_requirement_advice
+2025-08-14 21:44:54 | INFO     | __main__:_process_user_input:250 - About to run agent: multi_requirement_advice
+2025-08-14 21:44:54 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 我还有糖尿病...
+2025-08-14 21:44:54 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 2 个需求，总置信度: 0.60
+2025-08-14 21:44:54 | ERROR    | agents.multi_requirement_advice_agent:_handle_multi_requirement_query:134 - 多需求处理失败: object MultiRequirementRAGService can't be used in 'await' expression
+2025-08-14 21:45:39 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 21:45:39 | INFO     | __main__:_process_user_input:260 - Agent response: status=AgentResult.SUCCESS, message=根据您提供的信息和参考资料，以下是针对您（女性，糖尿病患者，心脏病患者，健康目标为减肥）的个性化饮食
+2025-08-14 21:50:38 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 21:50:38 | WARNING  | __main__:_process_user_input:158 - Invalid entities in plan_result: {}
+2025-08-14 21:50:38 | WARNING  | __main__:_process_user_input:165 - Unable to understand user request; using LLM empathetic fallback
+2025-08-14 21:51:34 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 21:51:34 | INFO     | core.multi_requirement_parser:parse:110 - 开始解析多需求查询: 我想要减脂，同时要减肥，你可以提供一些建议吗，然后同时提供食清单...
+2025-08-14 21:51:52 | INFO     | core.multi_requirement_parser:parse:143 - 解析完成，识别出 0 个需求，总置信度: 0.00
+2025-08-14 21:51:52 | INFO     | __main__:_process_user_input:235 - Creating agent: advice
+2025-08-14 21:51:52 | INFO     | core.rag_service:load_knowledge_base:279 - Loaded 1 documents, 0 chunks
+2025-08-14 21:51:52 | INFO     | agents.rag_enhanced_advice_agent:load_knowledge_from_directory:287 - Loaded knowledge base from: /home/zjq/document/langchain_learn/rag_knowledge_base
+2025-08-14 21:51:52 | INFO     | __main__:_process_user_input:237 - Agent created successfully: rag_advice
+2025-08-14 21:51:52 | INFO     | __main__:_process_user_input:250 - About to run agent: rag_advice
+2025-08-14 21:52:32 | INFO     | core.rag_service:generate_with_context:374 - RAG generation completed
+2025-08-14 21:52:32 | INFO     | __main__:_process_user_input:260 - Agent response: status=AgentResult.SUCCESS, message=根据您提供的信息和参考资料，以下是针对女性减脂减肥的科学建议及食谱清单（信息来源：中国营养学会临床营
+2025-08-14 21:55:15 | INFO     | __main__:_process_user_input:139 - Intent planning completed
+2025-08-14 21:55:15 | WARNING  | __main__:_process_user_input:158 - Invalid entities in plan_result: {}
+2025-08-14 21:55:15 | WARNING  | __main__:_process_user_input:165 - Unable to understand user request; using LLM empathetic fallback
